@@ -68,3 +68,25 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+# Discord Clone
+
+A React-based Discord clone integrated with a Spring Boot backend, featuring state management with Redux, user authentication, and channel management.
+
+## Features
+- Login and Signup screens
+- Redux state management for authentication
+- Integration with Spring Boot backend
+- Responsive design with Tailwind CSS
+
+## Setup
+1. Install dependencies: `npm install`
+2. Start the React app: `npm start`
+3. Run the Spring Boot backend: `mvn spring-boot:run`
+
+## Dependencies
+- React 18
+- Redux Toolkit
+- React Router
+- Tailwind CSS
+- Spring Boot 3.1.5
