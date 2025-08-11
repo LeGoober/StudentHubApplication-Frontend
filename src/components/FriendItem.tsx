@@ -1,22 +1,20 @@
-// @ts-ignore
 import React from 'react';
-// @ts-ignore
-import styles from './/src/components/FriendItem.module.css';
 
 interface FriendItemProps {
-    imgSrc?: string
+  imgSrc?: string;
+  name: string;
 }
 
-function FriendItem({name, img, imgSrc}) {
-    return (
-        <div className={styles.friendItem}>
-            <div className={styles.imgWrapper}>
-                <img src={img} alt="icon"/>
-            </div>
-            <p>{name}</p>
-            <i className="fa fa-xmark"></i>
-        </div>
-    );
-}
+const FriendItem: React.FC<FriendItemProps> = ({ imgSrc, name }) => {
+  return (
+    <div className="flex items-center gap-2 p-2 hover:bg-gray-200 rounded cursor-pointer">
+      <div className="w-8 h-8">
+        <img src={imgSrc} alt={`${name}'s avatar`} className="w-full h-full rounded-full" />
+      </div>
+      <p className="text-sm text-gray-800">{name}</p>
+      <i className="fa fa-xmark text-gray-500 hover:text-red-500"></i>
+    </div>
+  );
+};
 
 export default FriendItem;

@@ -2,23 +2,25 @@ import axios from 'axios';
 
 export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-export const getChannels = (token: string) =>
-    axios.get(`${API_URL}/channel/getAll`, { headers: { Authorization: `Bearer ${token}` } });
+const api = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
 
-export const createChannel = (name: string, adminId: number, token: string) =>
-    axios.post(`${API_URL}/channel/create`, { name, adminCreatedBy: adminId }, { headers: { Authorization: `Bearer ${token}` } });
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export const getProfiles = (token: string) =>
-    axios.get(`${API_URL}/user_profile/getAll`, { headers: { Authorization: `Bearer ${token}` } });
+export const login = async (userEmail: string, userPassword: string) =>
+  api.post('/auth/login', { userEmail, userPassword });
 
-export const getProfile = (id: number, token: string) =>
-    axios.get(`${API_URL}/user_profile/read/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+export const register = async (userEmail: string, userPassword: string, userFirstName: string, userLastName: string) =>
+  api.post('/auth/register', { userEmail, userPassword, userFirstName, userLastName });
 
-export const getPosts = (token: string) =>
-    axios.get(`${API_URL}/user_post/getAll`, { headers: { Authorization: `Bearer ${token}` } });
-
-export const login = (email: string, password: string) =>
-    axios.post(`${API_URL}/auth/login`, { email, password });
-
-export const register = (email: string, password: string, firstName: string, lastName: string) =>
-    axios.post(`${API_URL}/auth/register`, { email, password, firstName, lastName });
+export const getChannels = async () => api.get('/channel/getAll');
+export const createChannel = async (name: string, adminId: number) => api.post('/channel/create', { name, adminId });
+export const getProfile = async (id: number) => api.get(`/user_profile/get/${id}`);

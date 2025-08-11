@@ -1,4 +1,3 @@
-// @ts-ignore
 import React from 'react';
 
 interface InputProps {
@@ -16,6 +15,7 @@ const Input: React.FC<InputProps> = ({ placeholder, type = 'text', value, onChan
       value={value}
       onChange={onChange}
       className="w-full p-2 rounded bg-gray-200 border-none outline-none"
+      aria-label={placeholder || 'Input field'}
     />
   );
 };

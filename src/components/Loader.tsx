@@ -1,17 +1,17 @@
-// @ts-ignore
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const Loader: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(true);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const loader = document.getElementById('loader');
-      if (loader) loader.remove();
-    }, 2000);
+    const timer = setTimeout(() => setIsVisible(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
+  if (!isVisible) return null;
+
   return (
-    <div id="loader" className="fixed top-0 left-0 w-full h-full bg-gray-100 flex flex-col items-center justify-center z-50">
+    <div className="fixed top-0 left-0 w-full h-full bg-gray-100 flex flex-col items-center justify-center z-50">
       <i className="fa-brands fa-discord text-6xl text-gray-800 mb-8 animate-spin"></i>
       <h1 className="text-sm font-bold text-gray-900 mb-4">DID YOU KNOW</h1>
       <p className="text-base text-gray-700 flex flex-col items-center text-center gap-2">

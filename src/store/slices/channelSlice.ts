@@ -1,7 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+interface Channel {
+  id: number;
+  name: string;
+}
+
 interface ChannelState {
-  channels: any[];
+  channels: Channel[];
 }
 
 const initialState: ChannelState = {
@@ -12,7 +17,7 @@ const channelSlice = createSlice({
   name: 'channel',
   initialState,
   reducers: {
-    setChannels(state, action: PayloadAction<any[]>) {
+    setChannels(state, action: PayloadAction<Channel[]>) {
       state.channels = action.payload;
     },
   },

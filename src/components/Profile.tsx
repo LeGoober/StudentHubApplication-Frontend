@@ -1,42 +1,76 @@
-// @ts-ignore
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
-const Profile: React.FC = () => {
-  const [micOn, setMicOn] = useState(false);
-  const [headphonesOn, setHeadphonesOn] = useState(false);
+interface ProfileProps {
+  username?: string;
+  status?: 'Online' | 'Offline';
+  avatarSrc?: string;
+}
+
+const Profile: React.FC<ProfileProps> = ({ 
+  username = 'Anonymou5', 
+  status = 'Online', 
+  avatarSrc = '/Assets/img-icon-profile.jpeg' 
+}) => {
+  const [micMuted, setMicMuted] = useState(false);
+  const [headphonesMuted, setHeadphonesMuted] = useState(false);
+  
+  const muteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const unmuteAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  React.useEffect(() => {
+    muteAudioRef.current = new Audio('/Assets/discordmute_IZNcLx2.mp3');
+    unmuteAudioRef.current = new Audio('/Assets/discord-unmute-sound.mp3');
+    
+    return () => {
+      muteAudioRef.current = null;
+      unmuteAudioRef.current = null;
+    };
+  }, []);
 
   const toggleMic = () => {
-    setMicOn(!micOn);
+    if (!micMuted) {
+      muteAudioRef.current?.play().catch(() => {});
+    } else {
+      unmuteAudioRef.current?.play().catch(() => {});
+    }
+    setMicMuted(!micMuted);
   };
 
   const toggleHeadphones = () => {
-    setHeadphonesOn(!headphonesOn);
+    if (!headphonesMuted) {
+      muteAudioRef.current?.play().catch(() => {});
+    } else {
+      unmuteAudioRef.current?.play().catch(() => {});
+    }
+    setHeadphonesMuted(!headphonesMuted);
   };
 
   return (
-      <div className="bg-gray-200 flex items-center justify-between p-2 w-full absolute bottom-0">
-        <div className="flex items-center gap-2">
-          <div className="relative inline-block w-8 h-8">
-            <img src="/Assets/img-icon-profile.jpeg" alt="profile-icon" className="w-full h-full object-cover rounded-full" />
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full shadow"></div>
-          </div>
-          <div className="flex flex-col items-start justify-center leading-tight">
-            <p className="font-bold text-sm">Anonymou5</p>
-            <span className="font-light text-xs">Offline</span>
-          </div>
+    <div className="discord-profile">
+      <div className="discord-profile-info">
+        <div className="discord-avatar-wrapper">
+          <img src={avatarSrc} alt={`${username}'s avatar`} className="discord-avatar" />
+          <div className="discord-status-indicator"></div>
         </div>
-        <div className="flex items-center gap-2 text-lg">
-          <i
-              className={`fa-solid ${micOn ? 'fa-microphone-slash text-red-600 animate-spring' : 'fa-microphone text-gray-600'} cursor-pointer`}
-              onClick={toggleMic}
-          ></i>
-          <i
-              className={`fa-solid ${headphonesOn ? 'fa-headphones text-red-600 animate tilt' : 'fa-headphones text-gray-600'} cursor-pointer`}
-              onClick={toggleHeadphones}
-          ></i>
-          <i className="fa-solid fa-gear text-gray-600 cursor-pointer hover:rotate-180 transition-transform duration-500"></i>
+        <div className="discord-profile-text">
+          <p className="discord-profile-name">{username}</p>
+          <span className="discord-profile-status">{status}</span>
         </div>
       </div>
+      <div className="discord-profile-controls">
+        <i
+          id="mic"
+          className={`fa-solid ${micMuted ? 'fa-microphone-slash muted' : 'fa-microphone'}`}
+          onClick={toggleMic}
+        ></i>
+        <i
+          id="head"
+          className={`fa-solid fa-headphones ${headphonesMuted ? 'muted' : ''}`}
+          onClick={toggleHeadphones}
+        ></i>
+        <i className="fa-solid fa-gear"></i>
+      </div>
+    </div>
   );
 };
 

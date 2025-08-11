@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
   token: string | null;
+  user: { id: number } | null;
 }
 
 const initialState: AuthState = {
   token: null,
+  user: null,
 };
 
 const authSlice = createSlice({
@@ -14,12 +16,10 @@ const authSlice = createSlice({
   reducers: {
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
-    },
-    clearToken(state) {
-      state.token = null;
+      state.user = { id: 1 }; // Update based on actual backend response
     },
   },
 });
 
-export const { setToken, clearToken } = authSlice.actions;
+export const { setToken } = authSlice.actions;
 export default authSlice.reducer;
