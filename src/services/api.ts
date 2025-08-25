@@ -37,10 +37,22 @@ export const register = async (
     ...(staffNumber && { staffNumber })
   });
 
+// Channel endpoints (updated to match backend)
 export const getChannels = async () => api.get('/channel/getAll');
-export const createChannel = async (name: string, adminId: number) => api.post('/channel/create', { name, adminId });
-export const getProfile = async (id: number) => api.get(`/user_profile/read/${id}`);
-export const updateProfile = async (id: number, profileData: any) => api.put(`/user_profile/update/${id}`, profileData);
+export const createChannel = async (name: string, adminId: number) => api.post('/channel/create', { channelName: name, adminId });
+export const getChannel = async (id: number) => api.get(`/channel/read/${id}`);
+export const updateChannel = async (id: number, channelData: any) => api.put('/channel/update', { channelId: id, ...channelData });
+export const deleteChannel = async (id: number) => api.delete(`/channel/delete/${id}`);
+
+// User endpoints (updated to match backend)
+export const getUser = async (id: number) => api.get(`/auth/get/${id}`);
+export const updateUser = async (userData: any) => api.put('/auth/update', userData);
+export const deleteUser = async (id: number) => api.delete(`/auth/delete/${id}`);
+export const getAllUsers = async () => api.get('/auth/getAll');
+
+// Legacy profile endpoints (keeping for compatibility)
+export const getProfile = async (id: number) => api.get(`/auth/get/${id}`);
+export const updateProfile = async (id: number, profileData: any) => api.put('/auth/update', { userId: id, ...profileData });
 
 // Message endpoints
 export const getMessages = async (channelId: number, page = 0, size = 50) => 

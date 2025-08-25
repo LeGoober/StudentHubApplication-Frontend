@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUserInitials } from '../../../utils/userDisplay';
 
 interface UserAvatarProps {
   userId?: number;
@@ -53,19 +54,9 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     return colors[id % colors.length];
   };
 
-  // Generate initials from username or use user ID
+  // Generate initials using utility function
   const getInitials = () => {
-    if (userName) {
-      const names = userName.split(' ');
-      if (names.length >= 2) {
-        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
-      }
-      return userName.substring(0, 2).toUpperCase();
-    }
-    if (userId) {
-      return `U${userId}`;
-    }
-    return 'U';
+    return getUserInitials({ id: userId, displayName: userName });
   };
 
   const avatarContent = avatarUrl ? (

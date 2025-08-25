@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../services/api';
-import { setToken } from '../store/slices/authSlice';
+import { login, getUser } from '../services/api';
+import { setToken, setUser } from '../store/slices/authSlice';
+import { getUserIdFromToken } from '../utils/jwt';
 import Input from './Input';
 import Button from './Button';
 import AuthHeader from './layout/AuthHeader';
@@ -10,9 +11,10 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToSignup: () => void;
+  onLoginSuccess?: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSignup }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSignup, onLoginSuccess }) => {
   const [userEmail, setUserEmail] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,13 +31,41 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       setError('');
       setIsLoading(true);
       const response = await login(userEmail, userPassword);
-      localStorage.setItem('token', response.data);
-      dispatch(setToken(response.data));
-      onClose();
+      const { token, user } = response.data;
+      
+      // Store token
+      localStorage.setItem('token', token);
+      dispatch(setToken(token));
+      
+      // Store user data directly from response
+      if (user) {
+        dispatch(setUser(user));
+      } else {
+        // Fallback: Get user ID from token and fetch user details
+        const userId = getUserIdFromToken(token);
+        if (userId) {
+          try {
+            const userResponse = await getUser(userId);
+            dispatch(setUser(userResponse.data));
+          } catch (userError) {
+            console.error('Failed to fetch user details:', userError);
+            // Continue with login even if user fetch fails
+          }
+        }
+      }
+      
+      // Reset form
       setUserEmail('');
       setUserPassword('');
-    } catch (error) {
-      setError('Login failed: Invalid email or password');
+      
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Login failed: Invalid email or password';
+      setError(errorMessage);
       console.error('Login failed:', error);
     } finally {
       setIsLoading(false);

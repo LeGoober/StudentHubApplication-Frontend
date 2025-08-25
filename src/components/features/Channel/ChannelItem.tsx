@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
+import { Channel } from '../../../store/slices/channelSlice';
 
 interface ChannelItemProps {
-  channel: {
-    id: number;
-    name: string;
-    type?: 'text' | 'voice';
-    isPrivate?: boolean;
-    unreadCount?: number;
-    hasNotification?: boolean;
-    memberCount?: number;
-  };
+  channel: Channel;
   isActive?: boolean;
-  onClick?: (channelId: number) => void;
-  onEdit?: (channelId: number) => void;
-  onDelete?: (channelId: number) => void;
-  onMute?: (channelId: number) => void;
+  onClick?: (channelId: number | string) => void;
+  onEdit?: (channelId: number | string) => void;
+  onDelete?: (channelId: number | string) => void;
+  onMute?: (channelId: number | string) => void;
+  onManage?: (channel: Channel) => void;
   showActions?: boolean;
 }
 
@@ -25,6 +19,7 @@ const ChannelItem: React.FC<ChannelItemProps> = ({
   onEdit,
   onDelete,
   onMute,
+  onManage,
   showActions = true
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -130,44 +125,65 @@ const ChannelItem: React.FC<ChannelItemProps> = ({
 
           {/* Dropdown menu */}
           {showMenu && (
-            <div className="absolute right-0 top-8 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-20 py-1 min-w-[120px]">
-              {onEdit && (
+            <div className="absolute right-0 top-8 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-20 py-1 min-w-[150px]">
+              {onManage ? (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onEdit(channel.id);
+                    onManage(channel);
                     setShowMenu(false);
                   }}
                   className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
                 >
-                  Edit Channel
+                  <div className="flex items-center">
+                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {channel.isDefault ? 'Channel Info' : 'Manage Channel'}
+                  </div>
                 </button>
-              )}
-              
-              {onMute && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMute(channel.id);
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
-                >
-                  Mute Channel
-                </button>
-              )}
+              ) : (
+                <>
+                  {onEdit && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(channel.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
+                    >
+                      Edit Channel
+                    </button>
+                  )}
+                  
+                  {onMute && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMute(channel.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
+                    >
+                      Mute Channel
+                    </button>
+                  )}
 
-              {onDelete && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(channel.id);
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-gray-700"
-                >
-                  Delete Channel
-                </button>
+                  {onDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(channel.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-gray-700"
+                    >
+                      Delete Channel
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

@@ -30,8 +30,9 @@ const SignupScreen: React.FC = () => {
         studentNumber || undefined,
         staffNumber || undefined
       );
-      localStorage.setItem('token', response.data);
-      dispatch(setToken(response.data));
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      dispatch(setToken(token));
       navigate('/');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Signup failed: Please check your inputs';

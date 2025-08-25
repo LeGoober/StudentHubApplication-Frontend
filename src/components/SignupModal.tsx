@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { register } from '../services/api';
-import { setToken } from '../store/slices/authSlice';
+import { register, getUser } from '../services/api';
+import { setToken, setUser } from '../store/slices/authSlice';
+import { getUserIdFromToken } from '../utils/jwt';
 import Input from './Input';
 import Button from './Button';
 import AuthHeader from './layout/AuthHeader';
@@ -10,21 +11,46 @@ interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin: () => void;
+  onSignupSuccess?: () => void;
 }
 
-const SignupModal: React.FC<SignupModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
+const SignupModal: React.FC<SignupModalProps> = ({ isOpen, onClose, onSwitchToLogin, onSignupSuccess }) => {
   const [userEmail, setUserEmail] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [userFirstName, setUserFirstName] = useState('');
   const [userLastName, setUserLastName] = useState('');
+  const [userRole, setUserRole] = useState('STUDENT');
+  const [studentNumber, setStudentNumber] = useState('');
+  const [staffNumber, setStaffNumber] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
+  const userRoles = [
+    { value: 'STUDENT', label: 'Student', requiresStudentNumber: true },
+    { value: 'FACULTY_MEMBER', label: 'Faculty Member', requiresStaffNumber: true },
+    { value: 'IT_SUPPORT_STAFF', label: 'IT Support Staff', requiresStaffNumber: true },
+    { value: 'ENTREPRENEUR', label: 'Entrepreneur Student', requiresStudentNumber: true },
+    { value: 'GUEST', label: 'Guest', requiresNothing: true }
+  ];
+
+  const selectedRoleConfig = userRoles.find(role => role.value === userRole);
+
   const validateForm = () => {
     if (!userEmail || !userPassword || !userFirstName || !userLastName || !confirmPassword) {
       setError('Please fill in all fields');
+      return false;
+    }
+
+    // Validate role-specific requirements
+    if (selectedRoleConfig?.requiresStudentNumber && !studentNumber) {
+      setError('Student number is required for this role');
+      return false;
+    }
+
+    if (selectedRoleConfig?.requiresStaffNumber && !staffNumber) {
+      setError('Staff number is required for this role');
       return false;
     }
 
@@ -44,6 +70,18 @@ const SignupModal: React.FC<SignupModalProps> = ({ isOpen, onClose, onSwitchToLo
       return false;
     }
 
+    // Validate student number format (if provided)
+    if (studentNumber && !/^\d{8,}$/.test(studentNumber)) {
+      setError('Student number must be at least 8 digits');
+      return false;
+    }
+
+    // Validate staff number format (if provided)
+    if (staffNumber && !/^\d{6,}$/.test(staffNumber)) {
+      setError('Staff number must be at least 6 digits');
+      return false;
+    }
+
     return true;
   };
 
@@ -53,18 +91,58 @@ const SignupModal: React.FC<SignupModalProps> = ({ isOpen, onClose, onSwitchToLo
     try {
       setError('');
       setIsLoading(true);
-      const response = await register(userEmail, userPassword, userFirstName, userLastName);
-      localStorage.setItem('token', response.data);
-      dispatch(setToken(response.data));
-      onClose();
+      
+      const response = await register(
+        userEmail, 
+        userPassword, 
+        userFirstName, 
+        userLastName,
+        userRole,
+        studentNumber || undefined,
+        staffNumber || undefined
+      );
+      
+      const { token, user } = response.data;
+      
+      // Store token
+      localStorage.setItem('token', token);
+      dispatch(setToken(token));
+      
+      // Store user data directly from response
+      if (user) {
+        dispatch(setUser(user));
+      } else {
+        // Fallback: Get user ID from token and fetch user details
+        const userId = getUserIdFromToken(token);
+        if (userId) {
+          try {
+            const userResponse = await getUser(userId);
+            dispatch(setUser(userResponse.data));
+          } catch (userError) {
+            console.error('Failed to fetch user details:', userError);
+            // Continue with signup even if user fetch fails
+          }
+        }
+      }
+      
       // Reset form
       setUserEmail('');
       setUserPassword('');
       setUserFirstName('');
       setUserLastName('');
+      setUserRole('STUDENT');
+      setStudentNumber('');
+      setStaffNumber('');
       setConfirmPassword('');
-    } catch (error) {
-      setError('Registration failed: Email may already be registered');
+      
+      if (onSignupSuccess) {
+        onSignupSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Registration failed: Email may already be registered';
+      setError(errorMessage);
       console.error('Registration failed:', error);
     } finally {
       setIsLoading(false);
@@ -148,6 +226,60 @@ const SignupModal: React.FC<SignupModalProps> = ({ isOpen, onClose, onSwitchToLo
                 disabled={isLoading}
               />
             </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                Role
+              </label>
+              <select
+                id="role"
+                value={userRole}
+                onChange={(e) => setUserRole(e.target.value)}
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                {userRoles.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Conditional role-specific fields */}
+            {selectedRoleConfig?.requiresStudentNumber && (
+              <div>
+                <label htmlFor="studentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Student Number
+                </label>
+                <Input
+                  id="studentNumber"
+                  type="text"
+                  placeholder="Enter your student number"
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
+            {selectedRoleConfig?.requiresStaffNumber && (
+              <div>
+                <label htmlFor="staffNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Staff Number
+                </label>
+                <Input
+                  id="staffNumber"
+                  type="text"
+                  placeholder="Enter your staff number"
+                  value={staffNumber}
+                  onChange={(e) => setStaffNumber(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">

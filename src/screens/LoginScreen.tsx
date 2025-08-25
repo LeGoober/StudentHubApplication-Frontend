@@ -17,8 +17,9 @@ const LoginScreen: React.FC = () => {
     try {
       setError('');
       const response = await login(userEmail, userPassword);
-      localStorage.setItem('token', response.data);
-      dispatch(setToken(response.data));
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      dispatch(setToken(token));
       navigate('/');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed: Invalid email or password';

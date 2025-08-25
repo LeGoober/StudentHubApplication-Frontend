@@ -1,27 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
+import { setChannels, Channel } from '../../../store/slices/channelSlice';
 import { getChannels } from '../../../services/api';
 import ChannelItem from './ChannelItem';
 import CreateChannelModal from '../../CreateChannelModal';
+import ChannelManagementModal from '../../ChannelManagementModal';
+import DiscoverChannelsModal from '../../DiscoverChannelsModal';
+import { DEFAULT_CHANNELS } from '../../../utils/defaultChannels';
 
-interface Channel {
-  id: number;
-  name: string;
-  type?: 'text' | 'voice';
-  isPrivate?: boolean;
-  unreadCount?: number;
-  hasNotification?: boolean;
-  memberCount?: number;
-  category?: string;
-}
+// Using Channel interface from store/slices/channelSlice.ts
 
 interface ChannelListProps {
-  activeChannelId?: number;
-  onChannelSelect?: (channelId: number) => void;
-  onChannelEdit?: (channelId: number) => void;
-  onChannelDelete?: (channelId: number) => void;
-  onChannelMute?: (channelId: number) => void;
+  activeChannelId?: number | string;
+  onChannelSelect?: (channelId: number | string) => void;
+  onChannelEdit?: (channelId: number | string) => void;
+  onChannelDelete?: (channelId: number | string) => void;
+  onChannelMute?: (channelId: number | string) => void;
 }
 
 const ChannelList: React.FC<ChannelListProps> = ({
@@ -31,13 +26,16 @@ const ChannelList: React.FC<ChannelListProps> = ({
   onChannelDelete,
   onChannelMute
 }) => {
-  const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showManagementModal, setShowManagementModal] = useState(false);
+  const [showDiscoverModal, setShowDiscoverModal] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   
   const { token } = useSelector((state: RootState) => state.auth);
+  const channels = useSelector((state: RootState) => state.channel.channels);
   const dispatch = useDispatch();
 
   // Load channels on component mount
@@ -51,21 +49,46 @@ const ChannelList: React.FC<ChannelListProps> = ({
     try {
       setLoading(true);
       setError('');
-      const response = await getChannels();
       
-      // Transform API response to match our interface
-      const transformedChannels = response.data.map((channel: any) => ({
+      // Add default helpful channels
+      const defaultChannels: Channel[] = DEFAULT_CHANNELS.map(channel => ({
         id: channel.id,
         name: channel.name,
         type: 'text' as const,
         isPrivate: false,
-        unreadCount: Math.floor(Math.random() * 5), // Mock unread count
-        hasNotification: Math.random() > 0.7,
-        memberCount: Math.floor(Math.random() * 50) + 1,
-        category: channel.category || 'General'
+        unreadCount: 0,
+        hasNotification: false,
+        memberCount: 1,
+        category: channel.category,
+        description: channel.description,
+        isDefault: true
       }));
       
-      setChannels(transformedChannels);
+      // Load user-created channels from backend
+      let userChannels: Channel[] = [];
+      try {
+        const response = await getChannels();
+        userChannels = response.data.map((channel: any) => ({
+          id: channel.id,
+          name: channel.name || channel.channelName,
+          type: 'text' as const,
+          isPrivate: channel.isPrivate || false,
+          unreadCount: 0, // Remove dummy data
+          hasNotification: false,
+          memberCount: channel.memberCount || 1,
+          category: channel.category || 'General',
+          description: channel.description || '',
+          isDefault: false
+        }));
+      } catch (apiError) {
+        console.warn('Could not load user channels:', apiError);
+        // Continue with default channels only
+      }
+      
+      // Combine default and user channels
+      const allChannels = [...defaultChannels, ...userChannels];
+      dispatch(setChannels(allChannels));
+      
     } catch (error) {
       console.error('Failed to load channels:', error);
       setError('Failed to load channels');
@@ -86,7 +109,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
       category: 'General'
     };
     
-    setChannels(prev => [...prev, transformedChannel]);
+    dispatch(setChannels([...channels, transformedChannel]));
   };
 
   const toggleCategory = (category: string) => {
@@ -99,6 +122,23 @@ const ChannelList: React.FC<ChannelListProps> = ({
       }
       return newSet;
     });
+  };
+
+  const handleManageChannel = (channel: Channel) => {
+    setSelectedChannel(channel);
+    setShowManagementModal(true);
+  };
+
+  const handleChannelUpdated = (updatedChannel: Channel) => {
+    const updatedChannels = channels.map(ch => 
+      ch.id === updatedChannel.id ? updatedChannel : ch
+    );
+    dispatch(setChannels(updatedChannels));
+  };
+
+  const handleChannelDeleted = (channelId: number | string) => {
+    const updatedChannels = channels.filter(ch => ch.id !== channelId);
+    dispatch(setChannels(updatedChannels));
   };
 
   // Group channels by category
@@ -146,20 +186,31 @@ const ChannelList: React.FC<ChannelListProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* Header with create button */}
+      {/* Header with action buttons */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">
           Channels
         </h3>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="p-1 rounded hover:bg-gray-700 transition-colors"
-          title="Create Channel"
-        >
-          <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </button>
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => setShowDiscoverModal(true)}
+            className="p-1 rounded hover:bg-gray-700 transition-colors"
+            title="Discover Channels"
+          >
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="p-1 rounded hover:bg-gray-700 transition-colors"
+            title="Create Channel"
+          >
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Channel categories and channels */}
@@ -202,9 +253,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
                       channel={channel}
                       isActive={channel.id === activeChannelId}
                       onClick={onChannelSelect}
-                      onEdit={onChannelEdit}
-                      onDelete={onChannelDelete}
-                      onMute={onChannelMute}
+                      onManage={handleManageChannel}
                     />
                   ))}
 
@@ -221,9 +270,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
                       channel={channel}
                       isActive={channel.id === activeChannelId}
                       onClick={onChannelSelect}
-                      onEdit={onChannelEdit}
-                      onDelete={onChannelDelete}
-                      onMute={onChannelMute}
+                      onManage={handleManageChannel}
                     />
                   ))}
                 </div>
@@ -254,6 +301,28 @@ const ChannelList: React.FC<ChannelListProps> = ({
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onChannelCreated={handleChannelCreated}
+      />
+
+      {/* Channel Management Modal */}
+      <ChannelManagementModal
+        isOpen={showManagementModal}
+        onClose={() => {
+          setShowManagementModal(false);
+          setSelectedChannel(null);
+        }}
+        channel={selectedChannel}
+        onChannelUpdated={handleChannelUpdated}
+        onChannelDeleted={handleChannelDeleted}
+      />
+
+      {/* Discover Channels Modal */}
+      <DiscoverChannelsModal
+        isOpen={showDiscoverModal}
+        onClose={() => setShowDiscoverModal(false)}
+        onChannelJoined={(channel) => {
+          // Refresh channels list
+          loadChannels();
+        }}
       />
     </div>
   );

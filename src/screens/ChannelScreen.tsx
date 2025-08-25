@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { useTheme } from '../contexts/ThemeContext';
@@ -10,8 +10,6 @@ import ChannelList from '../components/features/Channel/ChannelList';
 import MessageList from '../components/features/Chat/MessageList';
 import ChatInput from '../components/features/Chat/ChatInput';
 import DiscordLoader from '../components/DiscordLoader';
-import LoginModal from '../components/LoginModal';
-import SignupModal from '../components/SignupModal';
 import ProfileModal from '../components/UserProfile/ProfileModal';
 import ThemeToggle from '../components/ThemeToggle/ThemeToggle';
 
@@ -30,12 +28,10 @@ interface Message {
 }
 
 const ChannelScreen: React.FC = () => {
-  const [activeChannelId, setActiveChannelId] = useState<number>(1); // Default to channel 1
-  const [activeChannelName, setActiveChannelName] = useState('general');
+  const [activeChannelId, setActiveChannelId] = useState<number | string>('default-1'); // Default to welcome-home channel
+  const [activeChannelName, setActiveChannelName] = useState('welcome-home');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
   
   const { user, token } = useSelector((state: RootState) => state.auth);
   const { theme } = useTheme();
@@ -51,23 +47,27 @@ const ChannelScreen: React.FC = () => {
     sendTyping,
     onlineUsers
   } = useRealTimeChat({
-    channelId: activeChannelId,
+    channelId: typeof activeChannelId === 'string' ? parseInt(activeChannelId.replace('default-', '')) || 1 : activeChannelId,
     enabled: Boolean(token || localStorage.getItem('token'))
   });
   
   // Check if user is authenticated
   const isAuthenticated = Boolean(token || localStorage.getItem('token'));
 
-  // Authentication check
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setShowLoginModal(true);
-    }
-  }, [isAuthenticated]);
-
-  const handleChannelSelect = (channelId: number) => {
+  const handleChannelSelect = (channelId: number | string) => {
     setActiveChannelId(channelId);
-    setActiveChannelName(`channel-${channelId}`);
+    // Handle both default channels and regular channels
+    if (typeof channelId === 'string' && channelId.startsWith('default-')) {
+      const channelMap: Record<string, string> = {
+        'default-1': 'welcome-home',
+        'default-2': 'how-to-navigate', 
+        'default-3': 'channel-settings',
+        'default-4': 'about-studenthub'
+      };
+      setActiveChannelName(channelMap[channelId] || `channel-${channelId}`);
+    } else {
+      setActiveChannelName(`channel-${channelId}`);
+    }
   };
 
   const handleSendMessage = (content: string) => {
@@ -99,68 +99,7 @@ const ChannelScreen: React.FC = () => {
     setShowSettingsModal(true);
   };
 
-  const handleSwitchToSignup = () => {
-    setShowLoginModal(false);
-    setShowSignupModal(true);
-  };
-
-  const handleSwitchToLogin = () => {
-    setShowSignupModal(false);
-    setShowLoginModal(true);
-  };
-
-  const handleCloseModals = () => {
-    setShowLoginModal(false);
-    setShowSignupModal(false);
-  };
-
-  // If not authenticated, show welcome screen with login prompt
-  if (!isAuthenticated) {
-    const isDark = theme === 'dark';
-    return (
-      <>
-        <DiscordLoader />
-        
-        {/* Unauthenticated view */}
-        <div className={`flex items-center justify-center h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
-          <div className="text-center">
-            <div className="absolute top-4 right-4">
-              <ThemeToggle />
-            </div>
-            <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>CPUT StudentHub</h1>
-            <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>Connect with your fellow students</p>
-            <p className={`${isDark ? 'text-gray-500' : 'text-gray-500'} mb-8 text-sm`}>Join channels, chat, and collaborate</p>
-            <div className="space-x-4">
-              <button
-                onClick={() => setShowLoginModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setShowSignupModal(true)}
-                className={`bg-transparent border ${isDark ? 'border-gray-600 hover:border-gray-500 text-gray-300' : 'border-gray-400 hover:border-gray-300 text-gray-700'} px-6 py-2 rounded-md transition-colors`}
-              >
-                Sign Up
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Authentication Modals */}
-        <LoginModal
-          isOpen={showLoginModal}
-          onClose={handleCloseModals}
-          onSwitchToSignup={handleSwitchToSignup}
-        />
-        <SignupModal
-          isOpen={showSignupModal}
-          onClose={handleCloseModals}
-          onSwitchToLogin={handleSwitchToLogin}
-        />
-      </>
-    );
-  }
+  // ChannelScreen now assumes user is authenticated (routing handles this)
 
   const isDark = theme === 'dark';
   
@@ -185,6 +124,11 @@ const ChannelScreen: React.FC = () => {
         <TopNavBar 
           onOpenProfile={handleOpenProfile}
           onOpenSettings={handleOpenSettings}
+          onChannelSelect={handleChannelSelect}
+          onUserSelect={(userId) => {
+            console.log('User selected:', userId);
+            // Could open user profile modal or start DM
+          }}
         />
       
       {/* Main content area */}

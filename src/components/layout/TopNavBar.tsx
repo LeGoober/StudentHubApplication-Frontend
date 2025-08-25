@@ -1,21 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
-import { setToken } from '../../store/slices/authSlice';
+import { logout } from '../../store/slices/authSlice';
 import UserAvatar from '../features/User/UserAvatar';
+import SearchModal from '../SearchModal';
+import { getUserDisplayName, getUserRole } from '../../utils/userDisplay';
 
 interface TopNavBarProps {
   onOpenProfile?: () => void;
   onOpenSettings?: () => void;
+  onChannelSelect?: (channelId: string | number) => void;
+  onUserSelect?: (userId: string | number) => void;
 }
 
-const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) => {
+const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings, onChannelSelect, onUserSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [userStatus, setUserStatus] = useState<'online' | 'away' | 'busy' | 'invisible'>('online');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  
+  // Temporary debugging to see user object structure
+  React.useEffect(() => {
+    if (user) {
+      console.log('TopNavBar user object:', user);
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -24,14 +36,26 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) 
       }
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    dispatch(setToken(''));
+    dispatch(logout());
     setIsDropdownOpen(false);
+    // Redirect will be handled by App.tsx routing
+    window.location.href = '/auth';
   };
 
   const handleStatusChange = (status: 'online' | 'away' | 'busy' | 'invisible') => {
@@ -47,7 +71,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) 
   };
 
   return (
-    <div className="bg-gray-800 text-white px-4 py-2 flex items-center justify-between border-b border-gray-700">
+    <>
+      <div className="bg-gray-800 text-white px-4 py-2 flex items-center justify-between border-b border-gray-700">
       {/* Left side - Logo/Brand */}
       <div className="flex items-center space-x-4">
         <h1 className="text-xl font-bold">CPUT StudentHub</h1>
@@ -56,15 +81,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) 
       {/* Center - Search */}
       <div className="flex-1 max-w-md mx-8">
         <div className="relative">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
-          />
+          <button
+            onClick={() => setIsSearchModalOpen(true)}
+            className="w-full bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors pl-10 text-left"
+          >
+            <span className="text-gray-400">Search channels, users...</span>
+          </button>
           <svg
-            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -76,6 +100,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) 
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
+          <div className="absolute right-3 top-2.5 text-xs text-gray-400 pointer-events-none">
+            <kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-xs">Ctrl K</kbd>
+          </div>
         </div>
       </div>
 
@@ -105,10 +132,22 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) 
             className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700 transition-colors"
           >
             <div className="relative">
-              <UserAvatar userId={user?.id} size="sm" />
+              <UserAvatar 
+                userId={user?.id} 
+                userName={getUserDisplayName(user)} 
+                avatarUrl={user?.avatar}
+                size="sm" 
+              />
               <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 ${statusColors[userStatus]}`}></div>
             </div>
-            <span className="hidden md:block">User #{user?.id || 1}</span>
+            <div className="hidden md:block">
+              <div className="text-sm font-medium">
+                {getUserDisplayName(user)}
+              </div>
+              <div className="text-xs text-gray-400">
+                {getUserRole(user)}
+              </div>
+            </div>
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -150,7 +189,16 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings }) 
           )}
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onChannelSelect={onChannelSelect}
+        onUserSelect={onUserSelect}
+      />
+    </>
   );
 };
 
