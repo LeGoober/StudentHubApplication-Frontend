@@ -20,8 +20,9 @@ const LoginScreen: React.FC = () => {
       localStorage.setItem('token', response.data);
       dispatch(setToken(response.data));
       navigate('/');
-    } catch (error) {
-      setError('Login failed: Invalid email or password');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Login failed: Invalid email or password';
+      setError(errorMessage);
       console.error('Login failed:', error);
     }
   };
