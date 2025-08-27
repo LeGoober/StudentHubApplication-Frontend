@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import UserAvatar from '../User/UserAvatar';
+import MessageContent from './MessageContent';
 
 interface MessageItemProps {
   message: {
@@ -116,10 +117,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
           </div>
         )}
 
-        {/* Message text */}
-        <div className="text-gray-300 break-words">
-          {message.content}
-        </div>
+        {/* Message text with markdown support */}
+        <MessageContent content={message.content} enableMarkdown={true} />
 
         {/* Reply count */}
         {message.replies && message.replies > 0 && (

@@ -82,6 +82,8 @@ export const useRealTimeChat = ({
         const chatMessage: ChatMessage = {
           id: message.payload.id,
           content: message.payload.content,
+          userId: message.payload.author.id,
+          userName: message.payload.author.name,
           author: {
             id: message.payload.author.id,
             name: message.payload.author.name,
@@ -154,14 +156,14 @@ export const useRealTimeChat = ({
   const sendMessage = useCallback((content: string) => {
     if (!user || !content.trim()) return;
     
-    websocketService.sendMessage(content.trim(), channelId, user.id);
+    websocketService.sendMessage(content.trim(), channelId);
   }, [channelId, user]);
 
   // Send typing indicator
   const sendTyping = useCallback((isTyping: boolean) => {
     if (!user) return;
     
-    websocketService.sendTyping(channelId, user.id, isTyping);
+    websocketService.sendTyping(channelId, isTyping);
   }, [channelId, user]);
 
   // Setup WebSocket connection and message handling

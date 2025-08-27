@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { createChannel } from '../services/api';
-import Input from './Input';
-import Button from './Button';
+import { logDiagnostics } from '../utils/apiDiagnostics';
+import Input from './ui/Input';
+import Button from './ui/Button';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
   const [isPrivate, setIsPrivate] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, token } = useSelector((state: RootState) => state.auth);
 
   const validateForm = () => {
     if (!channelName.trim()) {
@@ -53,10 +54,33 @@ const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
   const handleCreateChannel = async () => {
     if (!validateForm()) return;
 
+    // Check authentication
+    if (!token) {
+      setError('You must be logged in to create a channel.');
+      return;
+    }
+
     try {
       setError('');
       setIsLoading(true);
-      const response = await createChannel(channelName.trim(), user?.id || 1);
+      
+      const requestData = {
+        channelNameField: channelName.trim(),
+        channelTypeField: channelType.toUpperCase(), 
+        description: channelDescription.trim() || undefined
+      };
+      
+      console.log('Creating channel with data:', requestData);
+      console.log('User token present:', !!token);
+      console.log('User data:', user);
+      
+      const response = await createChannel(
+        channelName.trim(), 
+        channelType.toUpperCase(),
+        channelDescription.trim() || undefined
+      );
+      
+      console.log('Channel creation response:', response);
       
       if (onChannelCreated) {
         onChannelCreated(response.data);
@@ -67,9 +91,27 @@ const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
       setChannelDescription('');
       setChannelType('text');
       setIsPrivate(false);
-    } catch (error) {
-      setError('Failed to create channel. Please try again.');
+    } catch (error: any) {
       console.error('Channel creation failed:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+      
+      let errorMessage = 'Failed to create channel. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      setError(errorMessage);
+      
+      // Run diagnostics to help debug the issue
+      console.log('Running API diagnostics due to channel creation failure...');
+      logDiagnostics();
     } finally {
       setIsLoading(false);
     }

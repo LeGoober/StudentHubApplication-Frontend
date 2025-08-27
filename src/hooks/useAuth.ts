@@ -28,15 +28,20 @@ export const useAuth = () => {
         // Load user details if not already loaded
         if (!user) {
           const userId = getUserIdFromToken(savedToken);
+          console.log('Attempting to load user details for user ID:', userId);
+          
           if (userId) {
             try {
               const userResponse = await getUser(userId);
               dispatch(setUser(userResponse.data));
             } catch (error) {
               console.error('Failed to load user details:', error);
-              // If user fetch fails, might be invalid token
-              dispatch(logout());
+              console.log('This may be normal if user data was already provided during login');
+              // Don't logout automatically - the token might still be valid
+              // User data might have been provided during login
             }
+          } else {
+            console.log('No numeric user ID found in token, user data should have been provided during login');
           }
         }
       }
@@ -45,9 +50,13 @@ export const useAuth = () => {
     initializeAuth();
   }, [dispatch, token, user]);
 
-  return {
+  const authResult = {
     isAuthenticated: isAuthenticated || Boolean(token || localStorage.getItem('token')),
     user,
     token
   };
+  
+  console.log('useAuth result:', authResult);
+  
+  return authResult;
 };

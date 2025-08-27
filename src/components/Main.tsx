@@ -4,9 +4,9 @@ import { RootState } from '../store';
 import Sidebar from './Sidebar';
 import ChatSidebar from './ChatSidebar';
 import RightSideArea from './RightSideArea';
-import DiscordLoader from './DiscordLoader';
-import LoginModal from './LoginModal';
-import SignupModal from './SignupModal';
+import DiscordLoader from './ui/DiscordLoader';
+import LoginModal from './modals/LoginModal';
+import SignupModal from './modals/SignupModal';
 import CreateChannelModal from './CreateChannelModal';
 import TopNavBar from './layout/TopNavBar';
 

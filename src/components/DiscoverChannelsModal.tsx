@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { getChannels, joinChannel } from '../services/api';
-import Button from './Button';
+import Button from './ui/Button';
 
 interface Channel {
   id: number;
@@ -32,6 +32,7 @@ const DiscoverChannelsModal: React.FC<DiscoverChannelsModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [joiningChannels, setJoiningChannels] = useState<Set<number>>(new Set());
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const { token } = useSelector((state: RootState) => state.auth);
   const currentChannels = useSelector((state: RootState) => state.channel.channels);
@@ -45,6 +46,34 @@ const DiscoverChannelsModal: React.FC<DiscoverChannelsModalProps> = ({
   useEffect(() => {
     filterChannels();
   }, [channels, searchTerm, selectedCategory]);
+
+  // Handle escape key and click outside
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node) && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('mousedown', handleClickOutside);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
   const loadAllChannels = async () => {
     try {
@@ -126,7 +155,7 @@ const DiscoverChannelsModal: React.FC<DiscoverChannelsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden">
+      <div ref={modalRef} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden">
         {/* Header */}
         <div className="bg-gray-900 px-6 py-4 border-b border-gray-700">
           <div className="flex justify-between items-center">
@@ -257,9 +286,15 @@ const DiscoverChannelsModal: React.FC<DiscoverChannelsModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-4 bg-gray-900 border-t border-gray-700">
           <div className="flex justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              {filteredChannels.length} channel{filteredChannels.length !== 1 ? 's' : ''} found
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-gray-400 text-sm">
+                {filteredChannels.length} channel{filteredChannels.length !== 1 ? 's' : ''} found
+              </p>
+              <div className="flex items-center text-xs text-gray-500">
+                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">ESC</kbd>
+                <span className="ml-2">to close</span>
+              </div>
+            </div>
             <Button onClick={onClose} className="bg-gray-600 hover:bg-gray-700">
               Close
             </Button>

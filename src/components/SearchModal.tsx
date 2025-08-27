@@ -34,6 +34,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [allChannels, setAllChannels] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   
   const { token } = useSelector((state: RootState) => state.auth);
 
@@ -56,6 +57,26 @@ const SearchModal: React.FC<SearchModalProps> = ({
       setResults([]);
     }
   }, [query, allChannels, allUsers]);
+
+  // Handle click outside to close
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node) && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
   const loadAllData = async () => {
     try {
@@ -150,7 +171,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
+      <div ref={modalRef} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
         {/* Search Input */}
         <div className="p-4 border-b border-gray-700">
           <div className="relative">

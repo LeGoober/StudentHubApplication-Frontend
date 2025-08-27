@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login, getUser } from '../services/api';
-import { setToken, setUser } from '../store/slices/authSlice';
-import { getUserIdFromToken } from '../utils/jwt';
-import Input from './Input';
-import Button from './Button';
-import AuthHeader from './layout/AuthHeader';
+import { login, getUser } from '../../services/api';
+import { setToken, setUser } from '../../store/slices/authSlice';
+import { getUserIdFromToken } from '../../utils/jwt';
+import { websocketService } from '../../services/websocket';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
+import AuthHeader from '../layout/AuthHeader';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -30,18 +31,37 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
     try {
       setError('');
       setIsLoading(true);
+      console.log('Attempting login with:', { email: userEmail });
       const response = await login(userEmail, userPassword);
-      const { token, user } = response.data;
+      
+      // Handle different response formats - backend might return just token string or object with token
+      let token: string;
+      let user: any = null;
+      
+      if (typeof response.data === 'string') {
+        // Backend returns token as string
+        token = response.data;
+      } else if (response.data.token) {
+        // Backend returns object with token and optionally user
+        token = response.data.token;
+        user = response.data.user;
+      } else {
+        // Fallback - assume entire response is token
+        token = response.data;
+      }
+      
+      console.log('Login response:', response.data);
+      console.log('Extracted token:', token);
       
       // Store token
       localStorage.setItem('token', token);
       dispatch(setToken(token));
       
-      // Store user data directly from response
+      // Store user data directly from response or fetch it
       if (user) {
         dispatch(setUser(user));
       } else {
-        // Fallback: Get user ID from token and fetch user details
+        // Get user ID from token and fetch user details
         const userId = getUserIdFromToken(token);
         if (userId) {
           try {
@@ -58,15 +78,38 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       setUserEmail('');
       setUserPassword('');
       
+      console.log('Login successful, calling success callback');
+      
+      // Reconnect WebSocket with new token
+      websocketService.reconnectWithToken();
+      
       if (onLoginSuccess) {
         onLoginSuccess();
       } else {
         onClose();
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed: Invalid email or password';
-      setError(errorMessage);
       console.error('Login failed:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access forbidden. Please contact support.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message && !error.message.includes('Network Error')) {
+        errorMessage = `Login error: ${error.message}`;
+      } else if (error.message && error.message.includes('Network Error')) {
+        errorMessage = 'Unable to connect to server. Please check your connection.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

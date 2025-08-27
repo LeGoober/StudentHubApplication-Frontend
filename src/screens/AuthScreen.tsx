@@ -3,10 +3,10 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import { useTheme } from '../contexts/ThemeContext';
-import LoginModal from '../components/LoginModal';
-import SignupModal from '../components/SignupModal';
+import LoginModal from '../components/modals/LoginModal';
+import SignupModal from '../components/modals/SignupModal';
 import ThemeToggle from '../components/ThemeToggle/ThemeToggle';
-import DiscordLoader from '../components/DiscordLoader';
+import DiscordLoader from '../components/ui/DiscordLoader';
 
 const AuthScreen: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -42,6 +42,7 @@ const AuthScreen: React.FC = () => {
   };
 
   const handleLoginSuccess = () => {
+    console.log('handleLoginSuccess called, navigating to /channels');
     handleCloseModals();
     navigate('/channels');
   };

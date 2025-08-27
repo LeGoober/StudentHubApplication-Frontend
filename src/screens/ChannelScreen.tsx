@@ -9,9 +9,10 @@ import StatusBar from '../components/layout/StatusBar';
 import ChannelList from '../components/features/Channel/ChannelList';
 import MessageList from '../components/features/Chat/MessageList';
 import ChatInput from '../components/features/Chat/ChatInput';
-import DiscordLoader from '../components/DiscordLoader';
+import DiscordLoader from '../components/ui/DiscordLoader';
 import ProfileModal from '../components/UserProfile/ProfileModal';
 import ThemeToggle from '../components/ThemeToggle/ThemeToggle';
+import MembersSidebar from '../components/MembersSidebar';
 
 interface Message {
   id: string;
@@ -106,17 +107,31 @@ const ChannelScreen: React.FC = () => {
   return (
     <>
       <DiscordLoader />
-      
       <div className={`flex flex-col h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
         {/* Connection status indicator */}
         {chatError && (
-          <div className="bg-red-600 text-white px-4 py-2 text-sm text-center">
-            {chatError} - Check your connection
+          <div className="bg-red-600 text-white px-4 py-2 text-sm text-center flex items-center justify-between">
+            <span>{chatError} - Check your connection</span>
+            <button 
+              onClick={() => window.location.reload()}
+              className="ml-2 px-2 py-1 bg-red-700 hover:bg-red-800 rounded text-xs"
+            >
+              Reload
+            </button>
           </div>
         )}
-        {!isConnected && isAuthenticated && (
-          <div className="bg-yellow-600 text-white px-4 py-2 text-sm text-center">
-            Reconnecting to chat...
+        {!isConnected && isAuthenticated && !chatError && (
+          <div className="bg-yellow-600 text-white px-4 py-2 text-sm text-center flex items-center justify-between">
+            <span>Reconnecting to chat...</span>
+            <button 
+              onClick={() => {
+                const websocketService = require('../services/websocket').default;
+                websocketService.forceReconnect();
+              }}
+              className="ml-2 px-2 py-1 bg-yellow-700 hover:bg-yellow-800 rounded text-xs"
+            >
+              Retry Now
+            </button>
           </div>
         )}
         
@@ -145,6 +160,7 @@ const ChannelScreen: React.FC = () => {
         <div className={`flex-1 flex flex-col ${isDark ? 'bg-gray-600' : 'bg-white'}`}>
           {/* Channel header */}
           <ChannelHeader
+            channelId={typeof activeChannelId === 'string' ? parseInt(activeChannelId.replace('default-', '')) || undefined : activeChannelId}
             channelName={activeChannelName}
             memberCount={onlineUsers.length}
             description="General discussion for CPUT students"
@@ -174,27 +190,10 @@ const ChannelScreen: React.FC = () => {
           />
         </div>
 
-        {/* Right sidebar - Member list and user info */}
-        <div className={`w-60 ${isDark ? 'bg-gray-800 border-l border-gray-700' : 'bg-gray-200 border-l border-gray-300'} p-4`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Online Members</h3>
-            <ThemeToggle className="ml-2" />
-          </div>
-          <div className="space-y-2">
-            {onlineUsers.slice(0, 10).map((user) => (
-              <div key={user.id} className={`flex items-center space-x-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                <div className={`w-8 h-8 ${isDark ? 'bg-blue-500' : 'bg-blue-600'} rounded-full flex items-center justify-center text-white text-sm font-semibold`}>
-                  {user.name?.[0] || 'U'}
-                </div>
-                <span className="text-sm">{user.name}</span>
-                <div className="w-2 h-2 bg-green-500 rounded-full ml-auto"></div>
-              </div>
-            ))}
-            {onlineUsers.length === 0 && (
-              <p className={`${isDark ? 'text-gray-500' : 'text-gray-600'} text-sm`}>No users online</p>
-            )}
-          </div>
-        </div>
+        {/* Right sidebar - Enhanced Member list */}
+        <MembersSidebar 
+          onlineUsers={onlineUsers}
+        />
       </div>
 
       {/* Status bar */}

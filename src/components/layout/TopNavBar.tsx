@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
-import { logout } from '../../store/slices/authSlice';
+import { logout, setUser } from '../../store/slices/authSlice';
 import UserAvatar from '../features/User/UserAvatar';
 import SearchModal from '../SearchModal';
+import NotificationBell from '../NotificationBell';
 import { getUserDisplayName, getUserRole } from '../../utils/userDisplay';
+import { updateUserStatus } from '../../services/api';
 
 interface TopNavBarProps {
   onOpenProfile?: () => void;
@@ -22,10 +24,23 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings, on
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   
-  // Temporary debugging to see user object structure
+  // Initialize user status from user object and provide debugging
   React.useEffect(() => {
     if (user) {
       console.log('TopNavBar user object:', user);
+      
+      // Initialize status from user object if available
+      if (user.status) {
+        const mappedStatus = user.status.toLowerCase() as 'online' | 'away' | 'busy' | 'invisible';
+        if (['online', 'away', 'busy', 'invisible'].includes(mappedStatus)) {
+          setUserStatus(mappedStatus);
+          console.log('✅ User status initialized from user object:', mappedStatus);
+        }
+      } else if (user.online !== undefined) {
+        // Fallback to online boolean if status field is not available
+        setUserStatus(user.online ? 'online' : 'invisible');
+        console.log('✅ User status initialized from online field:', user.online ? 'online' : 'invisible');
+      }
     }
   }, [user]);
 
@@ -58,9 +73,29 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings, on
     window.location.href = '/auth';
   };
 
-  const handleStatusChange = (status: 'online' | 'away' | 'busy' | 'invisible') => {
-    setUserStatus(status);
-    setIsDropdownOpen(false);
+  const handleStatusChange = async (status: 'online' | 'away' | 'busy' | 'invisible') => {
+    try {
+      // Update local state immediately for responsive UI
+      setUserStatus(status);
+      setIsDropdownOpen(false);
+      
+      // Call API to persist status to database
+      await updateUserStatus(status);
+      console.log('✅ User status updated successfully:', status);
+      
+      // Update user object in Redux store to sync status across components
+      if (user) {
+        dispatch(setUser({
+          ...user,
+          status: status.toUpperCase(),
+          online: status === 'online'
+        }));
+      }
+    } catch (error) {
+      console.error('❌ Failed to update user status:', error);
+      // Optionally revert local state on error
+      // setUserStatus(previousStatus);
+    }
   };
 
   const statusColors = {
@@ -108,6 +143,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings, on
 
       {/* Right side - User menu */}
       <div className="flex items-center space-x-4">
+        {/* Notification Bell */}
+        <button
+          className="p-2 rounded-md hover:bg-gray-700 transition-colors"
+          title="Friend Requests"
+        >
+          <NotificationBell />
+        </button>
+
         {/* Settings button */}
         <button
           onClick={onOpenSettings}

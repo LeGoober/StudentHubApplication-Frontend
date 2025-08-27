@@ -1,12 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ChannelInfoModal from '../ChannelInfoModal';
 
 interface ChannelHeaderProps {
   channelName: string;
+  channelId?: number;
   memberCount?: number;
   description?: string;
 }
 
-const ChannelHeader: React.FC<ChannelHeaderProps> = ({ channelName, memberCount, description }) => {
+const ChannelHeader: React.FC<ChannelHeaderProps> = ({ channelName, channelId, memberCount, description }) => {
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | undefined>();
+
+  const handleChannelNameClick = (event: React.MouseEvent) => {
+    if (channelId) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setModalPosition({
+        x: rect.left + 10,
+        y: rect.bottom + 10
+      });
+      setShowInfoModal(true);
+    }
+  };
   return (
     <div className="bg-gray-700 text-white px-4 py-3 border-b border-gray-600">
       <div className="flex items-center justify-between">
@@ -15,7 +30,13 @@ const ChannelHeader: React.FC<ChannelHeaderProps> = ({ channelName, memberCount,
             <path d="M7 8a3 3 0 100-6 3 3 0 000 6zM14.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM1.615 16.428a1.224 1.224 0 01-.569-1.175 6.002 6.002 0 0111.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 017 18a9.953 9.953 0 01-5.385-1.572zM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 00-1.588-3.755 4.502 4.502 0 015.874 2.636.818.818 0 01-.36.98A7.465 7.465 0 0114.5 16z" />
           </svg>
           <div>
-            <h2 className="font-semibold text-lg">{channelName}</h2>
+            <h2 
+              className={`font-semibold text-lg ${channelId ? 'cursor-pointer hover:text-blue-300 transition-colors' : ''}`}
+              onClick={handleChannelNameClick}
+              title={channelId ? 'Click to view channel details' : ''}
+            >
+              #{channelName}
+            </h2>
             {description && <p className="text-sm text-gray-400">{description}</p>}
           </div>
         </div>
@@ -43,6 +64,17 @@ const ChannelHeader: React.FC<ChannelHeaderProps> = ({ channelName, memberCount,
           </button>
         </div>
       </div>
+
+      {/* Channel Info Modal */}
+      {channelId && (
+        <ChannelInfoModal
+          channelId={channelId}
+          channelName={channelName}
+          isOpen={showInfoModal}
+          onClose={() => setShowInfoModal(false)}
+          position={modalPosition}
+        />
+      )}
     </div>
   );
 };

@@ -98,18 +98,28 @@ const ChannelList: React.FC<ChannelListProps> = ({
   };
 
   const handleChannelCreated = (newChannel: any) => {
+    console.log('New channel created:', newChannel);
+    
     const transformedChannel: Channel = {
       id: newChannel.id,
-      name: newChannel.name,
+      name: newChannel.name || newChannel.channelName,
       type: 'text',
-      isPrivate: false,
+      isPrivate: newChannel.isPrivate || false,
       unreadCount: 0,
       hasNotification: false,
       memberCount: 1,
-      category: 'General'
+      category: newChannel.category || 'General',
+      description: newChannel.description || '',
+      isDefault: false
     };
     
+    // Add to existing channels and refresh the list to ensure backend sync
     dispatch(setChannels([...channels, transformedChannel]));
+    
+    // Refresh channels from backend to ensure consistency
+    setTimeout(() => {
+      loadChannels();
+    }, 500);
   };
 
   const toggleCategory = (category: string) => {

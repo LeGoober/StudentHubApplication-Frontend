@@ -3,8 +3,8 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
 import { setToken } from '../store/slices/authSlice';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 
 const LoginScreen: React.FC = () => {
   const [userEmail, setUserEmail] = useState('');

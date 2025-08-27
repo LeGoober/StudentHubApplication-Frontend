@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { register, getUser } from '../services/api';
-import { setToken, setUser } from '../store/slices/authSlice';
-import { getUserIdFromToken } from '../utils/jwt';
-import Input from './Input';
-import Button from './Button';
-import AuthHeader from './layout/AuthHeader';
+import { register, getUser } from '../../services/api';
+import { setToken, setUser } from '../../store/slices/authSlice';
+import { getUserIdFromToken } from '../../utils/jwt';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
+import AuthHeader from '../layout/AuthHeader';
 
 interface SignupModalProps {
   isOpen: boolean;

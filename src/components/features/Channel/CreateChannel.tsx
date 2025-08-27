@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { createChannel } from '../../../services/api';
-import Input from '../../Input';
-import Button from '../../Button';
+import Input from '../../ui/Input';
+import Button from '../../ui/Button';
 
 interface CreateChannelProps {
   onChannelCreated?: (channel: any) => void;
@@ -57,7 +57,11 @@ const CreateChannel: React.FC<CreateChannelProps> = ({
     try {
       setError('');
       setIsLoading(true);
-      const response = await createChannel(channelName.trim(), user?.id || 1);
+      const response = await createChannel(
+        channelName.trim(),
+        channelType.toUpperCase(),
+        'Auto-generated description'
+      );
       
       if (onChannelCreated) {
         onChannelCreated(response.data);
