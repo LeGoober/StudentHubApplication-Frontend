@@ -217,7 +217,7 @@ class WebSocketService {
 
       // Send join message to the backend
       this.stompClient.publish({
-        destination: '/app/join-channel',
+        destination: '/join-channel',
         body: JSON.stringify({
           channelId: channelId,
           userId: this.getCurrentUserId(),
@@ -236,7 +236,7 @@ class WebSocketService {
     
     if (this.stompClient && this.stompClient.connected) {
       this.stompClient.publish({
-        destination: '/app/leave-channel',
+        destination: '/leave-channel',
         body: JSON.stringify({
           channelId: channelId,
           userId: this.getCurrentUserId(),
@@ -281,7 +281,7 @@ class WebSocketService {
   public sendTyping(channelId: number, isTyping: boolean) {
     if (this.stompClient && this.stompClient.connected) {
       this.stompClient.publish({
-        destination: '/app/typing',
+        destination: '/typing',
         body: JSON.stringify({
           channelId: channelId,
           userId: this.getCurrentUserId(),

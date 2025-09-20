@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth';
 import AuthScreen from './screens/AuthScreen';
 import ChannelScreen from './screens/ChannelScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import EntrepreneurProductsScreen from './screens/EntrepreneurProductsScreen';
 
 const App: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -38,6 +39,14 @@ const App: React.FC = () => {
               <ProfileScreen /> : 
               <Navigate to="/auth" replace />
             } 
+          />
+          <Route
+            path="/entrepreneur/products"
+            element={
+              isAuthenticated ?
+                <EntrepreneurProductsScreen /> :
+                <Navigate to="/auth" replace />
+            }
           />
           <Route path="*" element={<div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">404 - Page Not Found</div>} />
         </Routes>
