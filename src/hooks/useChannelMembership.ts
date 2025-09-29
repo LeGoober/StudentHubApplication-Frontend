@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { checkChannelMembership, getMyChannels } from '../services/api';
+import { checkMembership as checkMembershipApi } from '../services/channels';
+import { getMyChannels } from '../services/api';
 
 interface UseChannelMembershipOptions {
   channelId?: number;
@@ -32,7 +33,7 @@ export const useChannelMembership = ({
     try {
       setIsLoading(true);
       setError(null);
-      const response = await checkChannelMembership(channelId);
+      const response = await checkMembershipApi(channelId);
       setIsMember(response.data);
     } catch (err: any) {
       console.error('Failed to check channel membership:', err);
@@ -48,7 +49,7 @@ export const useChannelMembership = ({
       setIsLoading(true);
       setError(null);
       const response = await getMyChannels();
-      setMyChannels(response.data);
+      setMyChannels(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
       console.error('Failed to load my channels:', err);
       setError(err.response?.data?.message || 'Failed to load channels');

@@ -6,7 +6,7 @@ import UserAvatar from '../features/User/UserAvatar';
 import SearchModal from '../SearchModal';
 import NotificationBell from '../NotificationBell';
 import { getUserDisplayName, getUserRole } from '../../utils/userDisplay';
-import { updateUserStatus } from '../../services/api';
+import { updateUserStatus, getUser } from '../../services/api';
 
 interface TopNavBarProps {
   onOpenProfile?: () => void;
@@ -75,26 +75,21 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onOpenProfile, onOpenSettings, on
 
   const handleStatusChange = async (status: 'online' | 'away' | 'busy' | 'invisible') => {
     try {
-      // Update local state immediately for responsive UI
-      setUserStatus(status);
+      // Backend-first: do not update local state until server confirms
       setIsDropdownOpen(false);
-      
-      // Call API to persist status to database
       await updateUserStatus(status);
-      console.log('✅ User status updated successfully:', status);
-      
-      // Update user object in Redux store to sync status across components
-      if (user) {
-        dispatch(setUser({
-          ...user,
-          status: status.toUpperCase(),
-          online: status === 'online'
-        }));
+      console.log('✅ User status updated on server:', status);
+      // After success, fetch latest user from backend to ensure consistency
+      if (user?.id) {
+        const fresh = await getUser(user.id);
+        if (fresh?.data) {
+          dispatch(setUser(fresh.data));
+          const mapped = (fresh.data.status?.toLowerCase?.() ?? (fresh.data.online ? 'online' : 'invisible')) as 'online' | 'away' | 'busy' | 'invisible';
+          setUserStatus(mapped);
+        }
       }
     } catch (error) {
       console.error('❌ Failed to update user status:', error);
-      // Optionally revert local state on error
-      // setUserStatus(previousStatus);
     }
   };
 

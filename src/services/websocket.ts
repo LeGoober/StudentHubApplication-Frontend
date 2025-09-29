@@ -3,12 +3,12 @@ import SockJS from 'sockjs-client';
 import { API_URL } from './api';
 import { getAuthToken, validateToken, clearAuthData, isTokenExpired } from '../utils/jwt';
 
-export interface WebSocketMessage {
+export type WebSocketMessage = {
   type: 'message' | 'user_joined' | 'user_left' | 'typing' | 'online_users' | 'ping' | 'join_channel' | 'leave_channel' | 'friend_request';
   payload: any;
 }
 
-export interface ChatMessage {
+export type ChatMessage = {
   id: string;
   content: string;
   userId: number;
@@ -38,7 +38,7 @@ class WebSocketService {
   private connectionHandlers: ((connected: boolean) => void)[] = [];
 
   constructor() {
-    this.connect();
+    // Do not auto-connect. Connect only after auth (backend-confirmed) via reconnectWithToken or forceReconnect.
   }
 
   private connect() {

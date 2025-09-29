@@ -17,7 +17,8 @@ const LoginScreen: React.FC = () => {
     try {
       setError('');
       const response = await login(userEmail, userPassword);
-      const { token, user } = response.data;
+      const { token } = response.data || {};
+      if (!token) throw new Error('Login response did not include a token');
       localStorage.setItem('token', token);
       dispatch(setToken(token));
       navigate('/');

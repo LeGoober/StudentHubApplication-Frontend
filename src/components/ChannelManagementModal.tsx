@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { updateChannel, deleteChannel, getChannel, joinChannel, leaveChannel, getChannelMembers, checkChannelMembership } from '../services/api';
+import { updateChannel, deleteChannel, getChannel, joinChannel, leaveChannel, getChannelMembers, checkMembership } from '../services/api';
 import Input from './ui/Input';
 import Button from './ui/Button';
 import { isDefaultChannel } from '../utils/defaultChannels';
@@ -64,7 +64,7 @@ const ChannelManagementModal: React.FC<ChannelManagementModalProps> = ({
       // Load members
       try {
         const membersResponse = await getChannelMembers(Number(channel.id));
-        setMembers(membersResponse.data);
+        setMembers(Array.isArray(membersResponse.data) ? membersResponse.data : []);
       } catch (memberErr) {
         console.warn('Failed to load channel members:', memberErr);
         setMembers([]);

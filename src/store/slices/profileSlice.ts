@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface Profile {
+type Profile = {
   firstName: string;
   lastName: string;
   email: string;
 }
 
-interface ProfileState {
+type ProfileState = {
   profile: Profile | null;
 }
 

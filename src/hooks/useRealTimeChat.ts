@@ -49,7 +49,7 @@ export const useRealTimeChat = ({
     try {
       setIsLoading(!append);
       const response = await getMessages(channelId, pageNum);
-      const newMessages = response.data.messages || [];
+      const newMessages = (response.data && Array.isArray(response.data.content) ? response.data.content : []) as any[];
       
       if (append) {
         setMessages(prev => [...newMessages.reverse(), ...prev]);

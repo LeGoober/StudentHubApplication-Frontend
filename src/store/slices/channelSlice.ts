@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface Channel {
+export type Channel = {
   id: number | string;
   name: string;
   type?: 'text' | 'voice';
@@ -13,7 +13,7 @@ export interface Channel {
   isDefault?: boolean;
 }
 
-interface ChannelState {
+type ChannelState = {
   channels: Channel[];
 }
 

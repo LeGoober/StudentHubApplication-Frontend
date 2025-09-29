@@ -27,8 +27,8 @@ const EntrepreneurProductsScreen: React.FC = () => {
         try {
             const res = await getEntrepreneurStudents();
             // backend returns { data: [...] } from axios
-            const data = res?.data || [];
-            setProfiles(data);
+            const data = Array.isArray(res?.data) ? res.data : [];
+            setProfiles(data as any);
         } catch (err: any) {
             console.error('Failed to load entrepreneur profiles', err);
             setError(err?.message || 'Failed to load profiles');

@@ -1,6 +1,6 @@
 // Types mapping the Java SpringBoot domain classes
 
-export interface UserProduct {
+export type UserProduct = {
   id: number;
   title?: string;
   description?: string;
@@ -10,7 +10,7 @@ export interface UserProduct {
 
 export type UserRole = 'STUDENT' | 'STAFF' | 'ADMIN' | string;
 
-export interface User {
+export type User = {
   userId: number;
   userFirstName?: string;
   userLastName?: string;
@@ -27,7 +27,7 @@ export interface User {
   entrepreneurProfile?: EntrepreneurUserProfile | null;
 }
 
-export interface EntrepreneurUserProfile {
+export type EntrepreneurUserProfile = {
   entrepreneurUserId: number; // maps to user_id in DB
   user?: User;
   isCommercePortfolioEnabled?: boolean;

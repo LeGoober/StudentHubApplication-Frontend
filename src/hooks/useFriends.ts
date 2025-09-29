@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getFriends, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, getFriendRequests, searchUsers } from '../services/api';
 
-export interface Friend {
+export type Friend = {
   id: number;
   name: string;
   email: string;
@@ -10,7 +10,7 @@ export interface Friend {
   avatar?: string;
 }
 
-export interface FriendRequest {
+export type FriendRequest = {
   id: number;
   fromUserId: number;
   fromUserName: string;
@@ -20,7 +20,7 @@ export interface FriendRequest {
   createdAt: string;
 }
 
-export interface SearchUser {
+export type SearchUser = {
   id: number;
   name: string;
   email: string;
@@ -29,7 +29,7 @@ export interface SearchUser {
   requestSent: boolean;
 }
 
-interface UseFriendsReturn {
+type UseFriendsReturn = {
   friends: Friend[];
   friendRequests: FriendRequest[];
   loading: boolean;
@@ -52,7 +52,7 @@ export const useFriends = (): UseFriendsReturn => {
   const refreshFriends = useCallback(async () => {
     try {
       const response = await getFriends();
-      setFriends(response.data);
+      setFriends(Array.isArray(response.data) ? response.data : []);
       setError(null); // Clear error on success
     } catch (err: any) {
       console.error('Failed to fetch friends:', err);
@@ -73,7 +73,7 @@ export const useFriends = (): UseFriendsReturn => {
   const refreshRequests = useCallback(async () => {
     try {
       const response = await getFriendRequests();
-      setFriendRequests(response.data);
+      setFriendRequests(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
       console.error('Failed to fetch friend requests:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch friend requests';
@@ -137,7 +137,7 @@ export const useFriends = (): UseFriendsReturn => {
   const searchForUsers = useCallback(async (query: string): Promise<SearchUser[]> => {
     try {
       const response = await searchUsers(query);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (err: any) {
       console.error('Failed to search users:', err);
       throw err;

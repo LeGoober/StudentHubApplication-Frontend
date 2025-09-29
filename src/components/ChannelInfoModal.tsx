@@ -65,10 +65,10 @@ const ChannelInfoModal: React.FC<ChannelInfoModalProps> = ({
           id: channelId,
           name: channelResponse.data.name || channelName,
           description: channelResponse.data.description,
-          memberCount: channelResponse.data.memberCount || 0,
+          memberCount: channelResponse.data.activeMemberCount || 0,
           isPrivate: channelResponse.data.isPrivate,
           createdAt: channelResponse.data.createdAt,
-          createdBy: channelResponse.data.createdBy
+          createdBy: channelResponse.data.adminCreatedChannel?.userFirstName || channelResponse.data.adminCreatedChannel?.userEmail
         });
       } else {
         // Fallback if channel details aren't available
@@ -79,7 +79,16 @@ const ChannelInfoModal: React.FC<ChannelInfoModalProps> = ({
         });
       }
 
-      setMembers(membersResponse.data || []);
+      const membersData = Array.isArray(membersResponse.data) ? membersResponse.data : [];
+      // Map backend User -> ChannelMember display shape
+      setMembers(membersData.map((u: any) => ({
+        id: u.id ?? u.userId ?? Math.random(),
+        name: u.userFirstName && u.userLastName ? `${u.userFirstName} ${u.userLastName}` : (u.userFirstName || u.userEmail || 'User'),
+        email: u.userEmail || '',
+        isOnline: !!(u.online || u.isOnline),
+        role: u.userRole
+      })));
+
     } catch (err: any) {
       console.error('Failed to load channel data:', err);
       setError('Failed to load channel information');
