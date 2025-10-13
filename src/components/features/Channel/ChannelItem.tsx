@@ -85,9 +85,12 @@ const ChannelItem: React.FC<ChannelItemProps> = ({
         {channel.name}
       </span>
 
-      {/* Member count for voice channels */}
-      {channel.type === 'voice' && channel.memberCount !== undefined && (
-        <span className="text-xs text-gray-400 mr-2">
+      {/* Member count for all channels */}
+      {channel.memberCount !== undefined && channel.memberCount > 0 && (
+        <span className="text-xs text-gray-400 mr-2 flex items-center">
+          <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
           {channel.memberCount}
         </span>
       )}

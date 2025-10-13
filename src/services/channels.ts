@@ -2,6 +2,12 @@ import api from './client';
 import type { OkJson, ReqJson } from '../types/openapi-helpers';
 
 export const getChannels = async () => api.get<OkJson<'getAll_5'>>('/channel/getAll');
+export const getChannelsWithMemberCounts = async () => {
+  const response = await api.get<OkJson<'getAll_5'>>('/channel/getAll');
+  // The backend should already include activeMemberCount in the response
+  // If not, we'll need to fetch it separately for each channel
+  return response;
+};
 export const createChannel = async (channelNameField: string, channelTypeField: string, description?: string) => {
   console.log('API createChannel called with:', { channelNameField, channelTypeField, description });
   

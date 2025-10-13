@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getChannelMembers, getChannel } from '../services/api';
+import { getChannelMembers as getChannelMembersEnhanced } from '../services/channelMembership';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface ChannelInfo {
@@ -57,7 +58,9 @@ const ChannelInfoModal: React.FC<ChannelInfoModalProps> = ({
       // Load channel details and members in parallel
       const [channelResponse, membersResponse] = await Promise.all([
         getChannel(channelId).catch(() => ({ data: null })),
-        getChannelMembers(channelId).catch(() => ({ data: [] }))
+        getChannelMembersEnhanced(channelId).catch(() => 
+          getChannelMembers(channelId).catch(() => ({ data: [] }))
+        )
       ]);
 
       if (channelResponse.data) {

@@ -156,7 +156,12 @@ export const useRealTimeChat = ({
   const sendMessage = useCallback((content: string) => {
     if (!user || !content.trim()) return;
     
-    websocketService.sendMessage(content.trim(), channelId);
+    console.log('useRealTimeChat: Sending message with user:', user);
+    websocketService.sendMessage(content.trim(), channelId, {
+      id: user.id,
+      displayName: user.displayName,
+      avatar: user.avatar
+    });
   }, [channelId, user]);
 
   // Send typing indicator
@@ -181,10 +186,13 @@ export const useRealTimeChat = ({
 
   // Join/leave channel and load messages
   useEffect(() => {
-    if (!enabled || !channelId) return;
+    if (!enabled || !channelId || !user) return;
 
-    // Join the channel
-    websocketService.joinChannel(channelId);
+    // Join the channel with user information
+    websocketService.joinChannel(channelId, {
+      id: user.id,
+      displayName: user.displayName
+    });
     
     // Load initial messages
     loadMessages();
@@ -194,7 +202,7 @@ export const useRealTimeChat = ({
       // Leave the channel when component unmounts or channel changes
       websocketService.leaveChannel(channelId);
     };
-  }, [channelId, enabled, loadMessages]);
+  }, [channelId, enabled, loadMessages, user]);
 
   // Clear typing users when channel changes
   useEffect(() => {

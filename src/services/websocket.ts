@@ -207,7 +207,7 @@ class WebSocketService {
     }
   }
 
-  public joinChannel(channelId: number) {
+  public joinChannel(channelId: number, user?: { id: number; displayName?: string }) {
     console.log('Joining channel:', channelId);
     this.currentChannelId = channelId;
 
@@ -215,13 +215,18 @@ class WebSocketService {
       // Subscribe to the channel topic
       this.subscribeToChannel(channelId);
 
+      const userId = user?.id || this.getCurrentUserId();
+      const userName = user?.displayName || this.getCurrentUserName();
+      
+      console.log('WebSocket: Joining channel with user data:', { userId, userName });
+
       // Send join message to the backend
       this.stompClient.publish({
-        destination: '/join-channel',
+        destination: '/app/join-channel',
         body: JSON.stringify({
           channelId: channelId,
-          userId: this.getCurrentUserId(),
-          userName: this.getCurrentUserName()
+          userId: userId,
+          userName: userName
         })
       });
 
@@ -236,7 +241,7 @@ class WebSocketService {
     
     if (this.stompClient && this.stompClient.connected) {
       this.stompClient.publish({
-        destination: '/leave-channel',
+        destination: '/app/leave-channel',
         body: JSON.stringify({
           channelId: channelId,
           userId: this.getCurrentUserId(),
@@ -258,16 +263,22 @@ class WebSocketService {
     }
   }
 
-  public sendMessage(content: string, channelId: number) {
+  public sendMessage(content: string, channelId: number, user?: { id: number; displayName?: string; avatar?: string }) {
     if (this.stompClient && this.stompClient.connected) {
+      const userId = user?.id || this.getCurrentUserId();
+      const userName = user?.displayName || this.getCurrentUserName();
+      const userAvatar = user?.avatar || this.getCurrentUserAvatar();
+      
+      console.log('WebSocket: Sending message with user data:', { userId, userName, userAvatar });
+      
       this.stompClient.publish({
         destination: '/app/send-message',
         body: JSON.stringify({
           content: content,
           channelId: channelId,
-          userId: this.getCurrentUserId(),
-          userName: this.getCurrentUserName(),
-          userAvatar: this.getCurrentUserAvatar(),
+          userId: userId,
+          userName: userName,
+          userAvatar: userAvatar,
           timestamp: new Date().toISOString()
         })
       });
@@ -281,7 +292,7 @@ class WebSocketService {
   public sendTyping(channelId: number, isTyping: boolean) {
     if (this.stompClient && this.stompClient.connected) {
       this.stompClient.publish({
-        destination: '/typing',
+        destination: '/app/typing',
         body: JSON.stringify({
           channelId: channelId,
           userId: this.getCurrentUserId(),
@@ -298,18 +309,21 @@ class WebSocketService {
       const userData = localStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        return user.id || user.userId || 0;
+        console.log('WebSocket: Retrieved user data:', user);
+        return user.id || user.userId || user.user_id || 0;
       }
       
       // Fallback: try to get from JWT token
       const token = localStorage.getItem('token');
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.userId || payload.id || 0;
+        console.log('WebSocket: Retrieved JWT payload:', payload);
+        return payload.userId || payload.id || payload.user_id || 0;
       }
     } catch (error) {
       console.error('Error getting user ID:', error);
     }
+    console.warn('WebSocket: No user ID found, returning 0');
     return 0;
   }
 
@@ -318,11 +332,15 @@ class WebSocketService {
       const userData = localStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        return user.displayName || user.username || user.name || 'Anonymous';
+        console.log('WebSocket: Retrieved user name data:', user);
+        return user.displayName || user.username || user.name || 
+               (user.userFirstName && user.userLastName ? `${user.userFirstName} ${user.userLastName}` : '') ||
+               user.email || 'Anonymous';
       }
     } catch (error) {
       console.error('Error getting user name:', error);
     }
+    console.warn('WebSocket: No user name found, returning Anonymous');
     return 'Anonymous';
   }
 
