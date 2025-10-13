@@ -89,7 +89,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     setIsLoading(true);
     try {
       await updateProfile(targetUserId, editForm);
-      setProfileData(prev => prev ? { ...prev, ...editForm } : null);
+      // Backend-first: refetch latest profile from server, do not merge locally
+      const refreshed = await getProfile(targetUserId);
+      setProfileData(refreshed.data);
       setIsEditing(false);
       setError(null);
     } catch (err: any) {

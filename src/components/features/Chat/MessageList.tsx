@@ -12,7 +12,7 @@ interface Message {
     avatar?: string;
     isOnline?: boolean;
   };
-  timestamp: Date;
+  timestamp: Date | string;
   edited?: boolean;
   replies?: number;
 }
@@ -75,7 +75,9 @@ const MessageList: React.FC<MessageListProps> = ({
     const groups: { [date: string]: Message[] } = {};
     
     messages.forEach((message) => {
-      const dateKey = message.timestamp.toDateString();
+      // Ensure timestamp is a Date object
+      const timestamp = message.timestamp instanceof Date ? message.timestamp : new Date(message.timestamp);
+      const dateKey = timestamp.toDateString();
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }
@@ -90,7 +92,10 @@ const MessageList: React.FC<MessageListProps> = ({
     if (!previousMessage) return true;
     if (previousMessage.author.id !== currentMessage.author.id) return true;
     
-    const timeDiff = currentMessage.timestamp.getTime() - previousMessage.timestamp.getTime();
+    // Ensure timestamps are Date objects
+    const currentTime = currentMessage.timestamp instanceof Date ? currentMessage.timestamp : new Date(currentMessage.timestamp);
+    const previousTime = previousMessage.timestamp instanceof Date ? previousMessage.timestamp : new Date(previousMessage.timestamp);
+    const timeDiff = currentTime.getTime() - previousTime.getTime();
     return timeDiff > 5 * 60 * 1000; // 5 minutes
   };
 
@@ -173,10 +178,16 @@ const MessageList: React.FC<MessageListProps> = ({
               const showAvatar = shouldShowAvatar(message, previousMessage);
               const isOwn = user?.id === message.author.id;
 
+              // Ensure message has Date object for MessageItem
+              const messageWithDateTimestamp = {
+                ...message,
+                timestamp: message.timestamp instanceof Date ? message.timestamp : new Date(message.timestamp)
+              };
+
               return (
                 <MessageItem
                   key={message.id}
-                  message={message}
+                  message={messageWithDateTimestamp}
                   isOwn={isOwn}
                   showAvatar={showAvatar}
                   onReply={onReply}

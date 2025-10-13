@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
 import { setChannels, Channel } from '../../../store/slices/channelSlice';
-import { getChannels } from '../../../services/api';
+import { getChannels, getChannelsWithMemberCounts } from '../../../services/api';
 import ChannelItem from './ChannelItem';
 import CreateChannelModal from '../../CreateChannelModal';
 import ChannelManagementModal from '../../ChannelManagementModal';
@@ -67,7 +67,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
       // Load user-created channels from backend
       let userChannels: Channel[] = [];
       try {
-        const response = await getChannels();
+        const response = await getChannelsWithMemberCounts();
         userChannels = response.data.map((channel: any) => ({
           id: channel.id,
           name: channel.name || channel.channelName,
@@ -75,7 +75,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
           isPrivate: channel.isPrivate || false,
           unreadCount: 0, // Remove dummy data
           hasNotification: false,
-          memberCount: channel.memberCount || 1,
+          memberCount: channel.activeMemberCount || channel.memberCount || 0,
           category: channel.category || 'General',
           description: channel.description || '',
           isDefault: false

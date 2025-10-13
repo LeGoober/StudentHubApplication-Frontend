@@ -46,8 +46,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
         token = response.data.token;
         user = response.data.user;
       } else {
-        // Fallback - assume entire response is token
-        token = response.data;
+        // Fallback - if backend returns an object without token, fail clearly
+        throw new Error('Login response did not include a token');
       }
       
       console.log('Login response:', response.data);

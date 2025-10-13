@@ -1,4 +1,7 @@
 import api, { API_URL } from './client';
+import type { components } from '../types/generated/api';
+
+type LoginResponse = { token?: string; user?: components['schemas']['User'] } | Record<string, never>;
 
 // Try multiple login endpoint formats
 export const tryMultipleLoginEndpoints = async (userEmail: string, userPassword: string) => {
@@ -17,7 +20,7 @@ export const tryMultipleLoginEndpoints = async (userEmail: string, userPassword:
   for (const attempt of loginAttempts) {
     try {
       console.log(`🎯 Trying endpoint: ${attempt.endpoint} with body:`, attempt.body);
-      const response = await api.post(attempt.endpoint, attempt.body);
+      const response = await api.post<LoginResponse>(attempt.endpoint, attempt.body);
       console.log('✅ Login successful with endpoint:', attempt.endpoint);
       return response;
     } catch (error: any) {

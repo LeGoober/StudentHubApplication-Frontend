@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { useTheme } from '../contexts/ThemeContext';
@@ -33,9 +33,54 @@ const ChannelScreen: React.FC = () => {
   const [activeChannelName, setActiveChannelName] = useState('welcome-home');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   
   const { user, token } = useSelector((state: RootState) => state.auth);
   const { theme } = useTheme();
+
+  // Responsive behavior: auto-collapse sidebars on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      const isTablet = window.innerWidth < 1024;
+      
+      if (isMobile) {
+        // On mobile, collapse both sidebars by default
+        setLeftSidebarCollapsed(true);
+        setRightSidebarCollapsed(true);
+      } else if (isTablet) {
+        // On tablet, collapse right sidebar by default
+        setRightSidebarCollapsed(true);
+      }
+    };
+
+    // Initial check
+    handleResize();
+    
+    // Listen for window resize
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Keyboard shortcuts for sidebar toggling
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl + [ to toggle left sidebar
+      if (e.ctrlKey && e.key === '[') {
+        e.preventDefault();
+        setLeftSidebarCollapsed(prev => !prev);
+      }
+      // Ctrl + ] to toggle right sidebar  
+      if (e.ctrlKey && e.key === ']') {
+        e.preventDefault();
+        setRightSidebarCollapsed(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
   
   // Use real-time chat hook
   const {
@@ -149,15 +194,48 @@ const ChannelScreen: React.FC = () => {
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar - Channel list */}
-        <div className={`w-60 ${isDark ? 'bg-gray-800' : 'bg-gray-200'} flex flex-col`}>
-          <ChannelList
-            activeChannelId={activeChannelId}
-            onChannelSelect={handleChannelSelect}
-          />
+        <div className={`${leftSidebarCollapsed ? 'w-12 md:w-12' : 'w-60 md:w-60'} ${isDark ? 'bg-gray-800' : 'bg-gray-200'} flex flex-col transition-all duration-300 ease-in-out relative flex-shrink-0`}>
+          {/* Left sidebar toggle button */}
+          <button
+            onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+            className={`absolute ${leftSidebarCollapsed ? '-right-3' : 'right-2'} bottom-20 z-10 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} rounded-full p-1.5 transition-all duration-200 shadow-md`}
+            title={leftSidebarCollapsed ? 'Expand Channels (Ctrl+[)' : 'Collapse Channels (Ctrl+[)'}
+          >
+            <svg 
+              className={`h-4 w-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-transform duration-200 ${leftSidebarCollapsed ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {!leftSidebarCollapsed ? (
+            <ChannelList
+              activeChannelId={activeChannelId}
+              onChannelSelect={handleChannelSelect}
+            />
+          ) : (
+            <div className="flex flex-col items-center pt-16 space-y-2">
+              {/* Active channel indicator */}
+              <div className={`w-8 h-8 ${isDark ? 'bg-blue-600' : 'bg-blue-500'} rounded flex items-center justify-center`}>
+                <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+              </div>
+              {/* Channel count indicator */}
+              <div className={`w-8 h-8 ${isDark ? 'bg-gray-700' : 'bg-gray-300'} rounded flex items-center justify-center`}>
+                <svg className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main chat area */}
-        <div className={`flex-1 flex flex-col ${isDark ? 'bg-gray-600' : 'bg-white'}`}>
+        <div className={`flex-1 flex flex-col ${isDark ? 'bg-gray-600' : 'bg-white'} relative`}>
           {/* Channel header */}
           <ChannelHeader
             channelId={typeof activeChannelId === 'string' ? parseInt(activeChannelId.replace('default-', '')) || undefined : activeChannelId}
@@ -191,9 +269,40 @@ const ChannelScreen: React.FC = () => {
         </div>
 
         {/* Right sidebar - Enhanced Member list */}
-        <MembersSidebar 
-          onlineUsers={onlineUsers}
-        />
+        <div className={`${rightSidebarCollapsed ? 'w-12 md:w-12' : 'w-64 md:w-64'} ${isDark ? 'bg-gray-800' : 'bg-gray-200'} transition-all duration-300 ease-in-out relative flex flex-col flex-shrink-0`}>
+          {/* Right sidebar toggle button */}
+          <button
+            onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+            className={`absolute ${rightSidebarCollapsed ? '-left-3' : 'left-2'} bottom-20 z-10 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} rounded-full p-1.5 transition-all duration-200 shadow-md`}
+            title={rightSidebarCollapsed ? 'Expand Members (Ctrl+])' : 'Collapse Members (Ctrl+])'}
+          >
+            <svg 
+              className={`h-4 w-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-transform duration-200 ${rightSidebarCollapsed ? '' : 'rotate-180'}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {!rightSidebarCollapsed ? (
+            <MembersSidebar 
+              onlineUsers={onlineUsers}
+            />
+          ) : (
+            <div className="flex flex-col items-center pt-16 space-y-2">
+              <div className={`w-8 h-8 ${isDark ? 'bg-gray-700' : 'bg-gray-300'} rounded flex items-center justify-center`}>
+                <svg className={`h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} rotate-90 mt-4`}>
+                {onlineUsers.length}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Status bar */}
