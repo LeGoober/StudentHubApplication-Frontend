@@ -4,7 +4,6 @@ import { RootState } from '../store';
 import Sidebar from './Sidebar';
 import ChatSidebar from './ChatSidebar';
 import RightSideArea from './RightSideArea';
-import DiscordLoader from './ui/DiscordLoader';
 import LoginModal from './modals/LoginModal';
 import SignupModal from './modals/SignupModal';
 import CreateChannelModal from './CreateChannelModal';
@@ -17,9 +16,9 @@ const Main: React.FC = () => {
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  
+
   const { token } = useSelector((state: RootState) => state.auth);
-  
+
   // Check if user is authenticated
   const isAuthenticated = Boolean(token || localStorage.getItem('token'));
 
@@ -70,8 +69,7 @@ const Main: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <>
-        <DiscordLoader />
-        
+
         {/* Unauthenticated view */}
         <div className="flex items-center justify-center h-screen bg-gray-900">
           <div className="text-center text-white">
@@ -111,16 +109,15 @@ const Main: React.FC = () => {
 
   return (
     <>
-      <DiscordLoader />
-      
+
       {/* Authenticated view */}
       <div className="flex flex-col h-screen bg-gray-900">
         {/* Top Navigation */}
-        <TopNavBar 
+        <TopNavBar
           onOpenProfile={handleOpenProfile}
           onOpenSettings={handleOpenSettings}
         />
-        
+
         {/* Main content area */}
         <main className="flex flex-1 overflow-hidden">
           <Sidebar toggleSidebar={toggleSidebar} />
@@ -139,7 +136,7 @@ const Main: React.FC = () => {
         onClose={() => setShowCreateChannelModal(false)}
         onChannelCreated={handleChannelCreated}
       />
-      
+
       {/* Profile Modal Placeholder */}
       {showProfileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

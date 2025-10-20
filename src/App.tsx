@@ -3,10 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useAuth } from './hooks/useAuth';
+import ErrorBoundary from './components/ErrorBoundary';
 import AuthScreen from './screens/AuthScreen';
 import ChannelScreen from './screens/ChannelScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import EntrepreneurProductsScreen from './screens/EntrepreneurProductsScreen';
+import EntrepreneurUserProfileScreen from './screens/EntrepreneurUserProfileScreen';
 
 const App: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -14,42 +16,69 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <Routes>
-          <Route path="/auth" element={<AuthScreen />} />
-          <Route 
-            path="/" 
-            element={
-              isAuthenticated ? 
-              <Navigate to="/channels" replace /> : 
-              <Navigate to="/auth" replace />
-            } 
-          />
-          <Route 
-            path="/channels" 
-            element={
-              isAuthenticated ? 
-              <ChannelScreen /> : 
-              <Navigate to="/auth" replace />
-            } 
-          />
-          <Route 
-            path="/profile/:id" 
-            element={
-              isAuthenticated ? 
-              <ProfileScreen /> : 
-              <Navigate to="/auth" replace />
-            } 
-          />
-          <Route
-            path="/entrepreneur/products"
-            element={
-              isAuthenticated ?
-                <EntrepreneurProductsScreen /> :
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/auth" element={<AuthScreen />} />
+            <Route
+              path="/"
+              element={
+                isAuthenticated ?
+                <Navigate to="/channels" replace /> :
                 <Navigate to="/auth" replace />
-            }
-          />
-          <Route path="*" element={<div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">404 - Page Not Found</div>} />
-        </Routes>
+              }
+            />
+            <Route
+              path="/channels"
+              element={
+                isAuthenticated ?
+                <ErrorBoundary><ChannelScreen /></ErrorBoundary> :
+                <Navigate to="/auth" replace />
+              }
+            />
+            <Route
+              path="/profile/:id"
+              element={
+                isAuthenticated ?
+                <ErrorBoundary><ProfileScreen /></ErrorBoundary> :
+                <Navigate to="/auth" replace />
+              }
+            />
+            <Route
+              path="/entrepreneur/products"
+              element={
+                isAuthenticated ?
+                  <ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary> :
+                  <Navigate to="/auth" replace />
+              }
+            />
+            {/* Alias for legacy/direct URL */}
+            <Route
+              path="/entrepreneur-products"
+              element={
+                isAuthenticated ?
+                  <ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary> :
+                  <Navigate to="/auth" replace />
+              }
+            />
+            <Route
+              path="/entrepreneurs/:userId"
+              element={
+                isAuthenticated ?
+                  <ErrorBoundary><EntrepreneurUserProfileScreen /></ErrorBoundary> :
+                  <Navigate to="/auth" replace />
+              }
+            />
+            <Route
+              path="/entrepreneurs/:userId/products"
+              element={
+                isAuthenticated ?
+                  <ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary> :
+                  <Navigate to="/auth" replace />
+              }
+            />
+            <Route path="*" element={<div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">404 - Page Not Found</div>} />
+          </Routes>
+        </ErrorBoundary>
       </NotificationProvider>
     </ThemeProvider>
   );

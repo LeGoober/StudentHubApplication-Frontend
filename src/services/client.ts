@@ -9,7 +9,13 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
+  const url = config.url || '';
+
+  // Avoid attaching Authorization header to public auth endpoints
+  const isAuthEndpoint = url.includes('/auth/login') || url.includes('/api/auth/login') ||
+                         url.includes('/auth/register') || url.includes('/api/auth/register');
+
+  if (token && !isAuthEndpoint) {
     // ensure headers object exists
     // @ts-ignore
     config.headers.Authorization = `Bearer ${token}`;
@@ -19,7 +25,8 @@ api.interceptors.request.use((config) => {
     url: config.url,
     data: config.data,
     headers: config.headers,
-    hasToken: !!token
+    hasToken: !!token,
+    skippedAuthHeaderForAuthEndpoint: isAuthEndpoint
   });
   return config;
 });

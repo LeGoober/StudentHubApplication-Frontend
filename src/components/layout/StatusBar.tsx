@@ -3,7 +3,7 @@ import React from 'react';
 interface StatusBarProps {
   onlineCount?: number;
   serverStatus?: 'online' | 'maintenance' | 'offline';
-  lastActivity?: Date;
+  lastActivity?: Date | string;
 }
 
 const StatusBar: React.FC<StatusBarProps> = ({ 
@@ -23,6 +23,19 @@ const StatusBar: React.FC<StatusBarProps> = ({
     offline: 'Offline'
   };
 
+  const formatLastActivity = (activity: Date | string | undefined) => {
+    if (!activity) return null;
+    
+    try {
+      const date = activity instanceof Date ? activity : new Date(activity);
+      if (isNaN(date.getTime())) return null;
+      return date.toLocaleTimeString();
+    } catch (error) {
+      console.error('Error formatting last activity:', error);
+      return null;
+    }
+  };
+
   return (
     <div className="bg-gray-800 text-white px-4 py-2 border-t border-gray-700">
       <div className="flex items-center justify-between text-sm">
@@ -40,9 +53,9 @@ const StatusBar: React.FC<StatusBarProps> = ({
           </div>
         </div>
 
-        {lastActivity && (
+        {formatLastActivity(lastActivity) && (
           <div className="text-gray-400">
-            Last activity: {lastActivity.toLocaleTimeString()}
+            Last activity: {formatLastActivity(lastActivity)}
           </div>
         )}
       </div>

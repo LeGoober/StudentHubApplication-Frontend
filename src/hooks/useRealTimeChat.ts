@@ -88,7 +88,8 @@ export const useRealTimeChat = ({
             id: message.payload.author.id,
             name: message.payload.author.name,
             avatar: message.payload.author.avatar,
-            isOnline: message.payload.author.isOnline
+            isOnline: message.payload.author.isOnline,
+            userRole: message.payload.author.userRole
           },
           channelId: message.payload.channelId,
           timestamp: new Date(message.payload.timestamp),
