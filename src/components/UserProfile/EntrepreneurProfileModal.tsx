@@ -64,7 +64,11 @@ const EntrepreneurProfileModal: React.FC<EntrepreneurProfileModalProps> = ({
   };
 
   const handleViewProducts = () => {
-    navigate('/entrepreneur-products');
+    if (profileData?.id) {
+      navigate('/entrepreneur-products', { state: { userId: profileData.id } });
+    } else {
+      navigate('/entrepreneur-products');
+    }
     onClose();
   };
 
