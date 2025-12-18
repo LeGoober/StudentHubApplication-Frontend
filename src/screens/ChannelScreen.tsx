@@ -9,8 +9,8 @@ import StatusBar from '../components/layout/StatusBar';
 import ChannelList from '../components/features/Channel/ChannelList';
 import MessageList from '../components/features/Chat/MessageList';
 import ChatInput from '../components/features/Chat/ChatInput';
-import DiscordLoader from '../components/ui/DiscordLoader';
 import ProfileModal from '../components/UserProfile/ProfileModal';
+import EntrepreneurProfileModal from '../components/UserProfile/EntrepreneurProfileModal';
 import ThemeToggle from '../components/ThemeToggle/ThemeToggle';
 import MembersSidebar from '../components/MembersSidebar';
 
@@ -35,7 +35,7 @@ const ChannelScreen: React.FC = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  
+
   const { user, token } = useSelector((state: RootState) => state.auth);
   const { theme } = useTheme();
 
@@ -44,7 +44,7 @@ const ChannelScreen: React.FC = () => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
       const isTablet = window.innerWidth < 1024;
-      
+
       if (isMobile) {
         // On mobile, collapse both sidebars by default
         setLeftSidebarCollapsed(true);
@@ -57,7 +57,7 @@ const ChannelScreen: React.FC = () => {
 
     // Initial check
     handleResize();
-    
+
     // Listen for window resize
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -71,7 +71,7 @@ const ChannelScreen: React.FC = () => {
         e.preventDefault();
         setLeftSidebarCollapsed(prev => !prev);
       }
-      // Ctrl + ] to toggle right sidebar  
+      // Ctrl + ] to toggle right sidebar
       if (e.ctrlKey && e.key === ']') {
         e.preventDefault();
         setRightSidebarCollapsed(prev => !prev);
@@ -81,7 +81,7 @@ const ChannelScreen: React.FC = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
-  
+
   // Use real-time chat hook
   const {
     messages,
@@ -96,7 +96,7 @@ const ChannelScreen: React.FC = () => {
     channelId: typeof activeChannelId === 'string' ? parseInt(activeChannelId.replace('default-', '')) || 1 : activeChannelId,
     enabled: Boolean(token || localStorage.getItem('token'))
   });
-  
+
   // Check if user is authenticated
   const isAuthenticated = Boolean(token || localStorage.getItem('token'));
 
@@ -106,7 +106,7 @@ const ChannelScreen: React.FC = () => {
     if (typeof channelId === 'string' && channelId.startsWith('default-')) {
       const channelMap: Record<string, string> = {
         'default-1': 'welcome-home',
-        'default-2': 'how-to-navigate', 
+        'default-2': 'how-to-navigate',
         'default-3': 'channel-settings',
         'default-4': 'about-studenthub'
       };
@@ -148,16 +148,15 @@ const ChannelScreen: React.FC = () => {
   // ChannelScreen now assumes user is authenticated (routing handles this)
 
   const isDark = theme === 'dark';
-  
+
   return (
     <>
-      <DiscordLoader />
       <div className={`flex flex-col h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
         {/* Connection status indicator */}
         {chatError && (
           <div className="bg-red-600 text-white px-4 py-2 text-sm text-center flex items-center justify-between">
             <span>{chatError} - Check your connection</span>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="ml-2 px-2 py-1 bg-red-700 hover:bg-red-800 rounded text-xs"
             >
@@ -168,7 +167,7 @@ const ChannelScreen: React.FC = () => {
         {!isConnected && isAuthenticated && !chatError && (
           <div className="bg-yellow-600 text-white px-4 py-2 text-sm text-center flex items-center justify-between">
             <span>Reconnecting to chat...</span>
-            <button 
+            <button
               onClick={() => {
                 const websocketService = require('../services/websocket').default;
                 websocketService.forceReconnect();
@@ -179,9 +178,9 @@ const ChannelScreen: React.FC = () => {
             </button>
           </div>
         )}
-        
+
         {/* Top Navigation Bar */}
-        <TopNavBar 
+        <TopNavBar
           onOpenProfile={handleOpenProfile}
           onOpenSettings={handleOpenSettings}
           onChannelSelect={handleChannelSelect}
@@ -190,7 +189,7 @@ const ChannelScreen: React.FC = () => {
             // Could open user profile modal or start DM
           }}
         />
-      
+
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar - Channel list */}
@@ -201,10 +200,10 @@ const ChannelScreen: React.FC = () => {
             className={`absolute ${leftSidebarCollapsed ? '-right-3' : 'right-2'} bottom-20 z-10 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} rounded-full p-1.5 transition-all duration-200 shadow-md`}
             title={leftSidebarCollapsed ? 'Expand Channels (Ctrl+[)' : 'Collapse Channels (Ctrl+[)'}
           >
-            <svg 
-              className={`h-4 w-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-transform duration-200 ${leftSidebarCollapsed ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`h-4 w-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-transform duration-200 ${leftSidebarCollapsed ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -235,7 +234,7 @@ const ChannelScreen: React.FC = () => {
         </div>
 
         {/* Main chat area */}
-        <div className={`flex-1 flex flex-col ${isDark ? 'bg-gray-600' : 'bg-white'} relative`}>
+        <div className={`flex-1 flex flex-col min-h-0 ${isDark ? 'bg-gray-600' : 'bg-white'} relative`}>
           {/* Channel header */}
           <ChannelHeader
             channelId={typeof activeChannelId === 'string' ? parseInt(activeChannelId.replace('default-', '')) || undefined : activeChannelId}
@@ -276,10 +275,10 @@ const ChannelScreen: React.FC = () => {
             className={`absolute ${rightSidebarCollapsed ? '-left-3' : 'left-2'} bottom-20 z-10 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'} rounded-full p-1.5 transition-all duration-200 shadow-md`}
             title={rightSidebarCollapsed ? 'Expand Members (Ctrl+])' : 'Collapse Members (Ctrl+])'}
           >
-            <svg 
-              className={`h-4 w-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-transform duration-200 ${rightSidebarCollapsed ? '' : 'rotate-180'}`} 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`h-4 w-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-transform duration-200 ${rightSidebarCollapsed ? '' : 'rotate-180'}`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -287,7 +286,7 @@ const ChannelScreen: React.FC = () => {
           </button>
 
           {!rightSidebarCollapsed ? (
-            <MembersSidebar 
+            <MembersSidebar
               onlineUsers={onlineUsers}
             />
           ) : (
@@ -307,17 +306,26 @@ const ChannelScreen: React.FC = () => {
 
       {/* Status bar */}
       <StatusBar
-        onlineCount={45}
-        serverStatus="online"
-        lastActivity={new Date()}
+        onlineCount={onlineUsers.length}
+        serverStatus={isConnected ? 'online' : 'offline'}
+        lastActivity={messages && messages.length > 0 ? messages[messages.length - 1].timestamp : new Date()}
       />
 
       {/* Enhanced Profile Modal */}
-      <ProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        isOwnProfile={true}
-      />
+      {user?.userRole === 'ENTREPRENEUR' ? (
+        <EntrepreneurProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          userId={user?.id ?? 0}
+          isOwnProfile={true}
+        />
+      ) : (
+        <ProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          isOwnProfile={true}
+        />
+      )}
 
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

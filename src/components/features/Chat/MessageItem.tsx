@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store';
 import UserAvatar from '../User/UserAvatar';
 import MessageContent from './MessageContent';
+import ProfileModal from '../../UserProfile/ProfileModal';
+import EntrepreneurProfileModal from '../../UserProfile/EntrepreneurProfileModal';
 
 interface MessageItemProps {
   message: {
@@ -11,6 +15,7 @@ interface MessageItemProps {
       name: string;
       avatar?: string;
       isOnline?: boolean;
+      userRole?: string;
     };
     timestamp: Date;
     edited?: boolean;
@@ -35,36 +40,45 @@ const MessageItem: React.FC<MessageItemProps> = ({
 }) => {
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  // Check if the message author is an entrepreneur
+  const isAuthorEntrepreneur = message.author.userRole === 'ENTREPRENEUR' || message.author.userRole?.toUpperCase() === 'ENTREPRENEUR';
+  
+  // Check if this is the current user's profile
+  const isOwnProfile = user?.id === message.author.id;
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (days === 0) {
-      return timestamp.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
+      return timestamp.toLocaleTimeString('en-US', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: false 
+        hour12: false
       });
     } else if (days === 1) {
-      return 'Yesterday ' + timestamp.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
+      return 'Yesterday ' + timestamp.toLocaleTimeString('en-US', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: false 
+        hour12: false
       });
     } else if (days < 7) {
       return timestamp.toLocaleDateString('en-US', { weekday: 'long' }) + ' ' +
-             timestamp.toLocaleTimeString('en-US', { 
-               hour: '2-digit', 
+             timestamp.toLocaleTimeString('en-US', {
+               hour: '2-digit',
                minute: '2-digit',
-               hour12: false 
+               hour12: false
              });
     } else {
-      return timestamp.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      return timestamp.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       });
     }
   };
@@ -91,13 +105,22 @@ const MessageItem: React.FC<MessageItemProps> = ({
     >
       {/* Avatar */}
       {showAvatar && (
-        <div className="flex-shrink-0">
-          <UserAvatar 
-            userId={message.author.id} 
-            size="md" 
-            showOnlineStatus 
+        <button
+          type="button"
+          onClick={() => setIsProfileOpen(true)}
+          className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full cursor-pointer"
+          title={`View ${message.author.name || `User #${message.author.id}`} profile`}
+          aria-label="Open user profile"
+        >
+          <UserAvatar
+            userId={message.author.id}
+            userName={message.author.name}
+            userRole={message.author.userRole}
+            size="md"
+            showOnlineStatus
+            showEntrepreneurBadge={true}
           />
-        </div>
+        </button>
       )}
 
       {/* Message content */}
@@ -196,11 +219,28 @@ const MessageItem: React.FC<MessageItemProps> = ({
               title="Delete"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
           )}
         </div>
+      )}
+
+      {/* Profile modal - conditional rendering based on user role */}
+      {isAuthorEntrepreneur ? (
+        <EntrepreneurProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          userId={message.author.id}
+          isOwnProfile={isOwnProfile}
+        />
+      ) : (
+        <ProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          userId={message.author.id}
+          isOwnProfile={isOwnProfile}
+        />
       )}
     </div>
   );

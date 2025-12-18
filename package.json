@@ -1,6 +1,7 @@
 {
-  "name": "discord-clone",
+  "name": "student-hub-frontend",
   "version": "0.1.0",
+  "homepage": ".",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@reduxjs/toolkit": "^2.2.8",
@@ -12,6 +13,7 @@
     "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.27.0",
+    "serve": "^14.2.4",
     "sockjs-client": "^1.6.1",
     "tailwindcss": "^3.4.14"
   },
@@ -30,7 +32,8 @@
     "web-vitals": "^4.2.3"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "dev": "react-scripts start",
+    "start": "serve -s build -l $PORT",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

@@ -22,6 +22,7 @@ export type ChatMessage = {
     name: string;
     avatar?: string;
     isOnline?: boolean;
+    userRole?: string;
   };
   replies?: number;
 }

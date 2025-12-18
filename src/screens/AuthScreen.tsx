@@ -6,16 +6,15 @@ import { useTheme } from '../contexts/ThemeContext';
 import LoginModal from '../components/modals/LoginModal';
 import SignupModal from '../components/modals/SignupModal';
 import ThemeToggle from '../components/ThemeToggle/ThemeToggle';
-import DiscordLoader from '../components/ui/DiscordLoader';
 
 const AuthScreen: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
-  
+
   const { token } = useSelector((state: RootState) => state.auth);
   const { theme } = useTheme();
   const navigate = useNavigate();
-  
+
   // Check if user is authenticated
   const isAuthenticated = Boolean(token || localStorage.getItem('token'));
 
@@ -56,8 +55,7 @@ const AuthScreen: React.FC = () => {
 
   return (
     <>
-      <DiscordLoader />
-      
+
       {/* Main Auth Screen */}
       <div className={`flex items-center justify-center min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
         <div className="text-center max-w-md mx-auto px-6">
@@ -92,7 +90,7 @@ const AuthScreen: React.FC = () => {
             >
               Sign In to Your Account
             </button>
-            
+
             <button
               onClick={() => setShowSignupModal(true)}
               className={`w-full border-2 font-medium py-3 px-6 rounded-lg transition-colors duration-200 ${
@@ -116,7 +114,7 @@ const AuthScreen: React.FC = () => {
               <p className="text-sm font-medium">Connect</p>
               <p className="text-xs">Chat with students</p>
             </div>
-            
+
             <div className="text-center">
               <div className={`w-12 h-12 ${isDark ? 'bg-gray-800' : 'bg-gray-200'} rounded-lg flex items-center justify-center mx-auto mb-3`}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +124,7 @@ const AuthScreen: React.FC = () => {
               <p className="text-sm font-medium">Collaborate</p>
               <p className="text-xs">Work on projects</p>
             </div>
-            
+
             <div className="text-center">
               <div className={`w-12 h-12 ${isDark ? 'bg-gray-800' : 'bg-gray-200'} rounded-lg flex items-center justify-center mx-auto mb-3`}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +145,7 @@ const AuthScreen: React.FC = () => {
         onSwitchToSignup={handleSwitchToSignup}
         onLoginSuccess={handleLoginSuccess}
       />
-      
+
       <SignupModal
         isOpen={showSignupModal}
         onClose={handleCloseModals}

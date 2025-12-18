@@ -3,13 +3,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { getProfile, updateProfile } from '../../services/api';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfileData {
   id: number;
   userFirstName: string;
   userLastName: string;
   userEmail: string;
-  userRole: 'STUDENT' | 'STAFF' | 'ADMIN';
+  userRole: 'STUDENT' | 'STAFF' | 'ADMIN' | 'ENTREPRENEUR';
   studentNumber?: string;
   staffNumber?: string;
   bio?: string;
@@ -34,7 +35,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
   const { theme } = useTheme();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -64,7 +65,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         const response = await getProfile(targetUserId);
         const profile = response.data;
         setProfileData(profile);
-        
+
         if (isOwnProfile) {
           setEditForm({
             userFirstName: profile.userFirstName || '',

@@ -49,7 +49,15 @@ export const useFriends = (): UseFriendsReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const hasToken = () => !!localStorage.getItem('token');
+
   const refreshFriends = useCallback(async () => {
+    // Avoid hitting protected endpoint when unauthenticated
+    if (!hasToken()) {
+      setFriends([]);
+      setError(null);
+      return;
+    }
     try {
       const response = await getFriends();
       setFriends(Array.isArray(response.data) ? response.data : []);
@@ -57,34 +65,40 @@ export const useFriends = (): UseFriendsReturn => {
     } catch (err: any) {
       console.error('Failed to fetch friends:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch friends';
-      
+
       // Check for specific Hibernate errors
       if (err.message?.includes('SingleTableEntityPersister') || err.response?.data?.includes('Hibernate')) {
         setError('Backend database error. Please contact support or try again later.');
       } else {
         setError(errorMessage);
       }
-      
+
       // Set empty array to prevent UI issues
       setFriends([]);
     }
   }, []);
 
   const refreshRequests = useCallback(async () => {
+    // Avoid hitting protected endpoint when unauthenticated
+    if (!hasToken()) {
+      setFriendRequests([]);
+      // do not set error here to keep Auth page clean
+      return;
+    }
     try {
       const response = await getFriendRequests();
       setFriendRequests(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
       console.error('Failed to fetch friend requests:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch friend requests';
-      
+
       // Check for specific Hibernate errors
       if (err.message?.includes('SingleTableEntityPersister') || err.response?.data?.includes('Hibernate')) {
         setError('Backend database error. Please contact support or try again later.');
       } else {
         setError(errorMessage);
       }
-      
+
       // Set empty array to prevent UI issues
       setFriendRequests([]);
     }
@@ -148,6 +162,13 @@ export const useFriends = (): UseFriendsReturn => {
     const loadInitialData = async () => {
       setLoading(true);
       try {
+        if (!hasToken()) {
+          // If unauthenticated, skip initial fetches to avoid 403s on /auth
+          setFriends([]);
+          setFriendRequests([]);
+          setError(null);
+          return;
+        }
         await Promise.all([refreshFriends(), refreshRequests()]);
       } catch (err) {
         console.error('Failed to load initial friend data:', err);

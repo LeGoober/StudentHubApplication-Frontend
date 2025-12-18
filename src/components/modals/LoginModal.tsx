@@ -33,11 +33,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       setIsLoading(true);
       console.log('Attempting login with:', { email: userEmail });
       const response = await login(userEmail, userPassword);
-      
+
       // Handle different response formats - backend might return just token string or object with token
       let token: string;
       let user: any = null;
-      
+
       if (typeof response.data === 'string') {
         // Backend returns token as string
         token = response.data;
@@ -49,14 +49,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
         // Fallback - if backend returns an object without token, fail clearly
         throw new Error('Login response did not include a token');
       }
-      
+
       console.log('Login response:', response.data);
       console.log('Extracted token:', token);
-      
+
       // Store token
       localStorage.setItem('token', token);
       dispatch(setToken(token));
-      
+
       // Store user data directly from response or fetch it
       if (user) {
         dispatch(setUser(user));
@@ -73,16 +73,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
           }
         }
       }
-      
+
       // Reset form
       setUserEmail('');
       setUserPassword('');
-      
+
       console.log('Login successful, calling success callback');
-      
+
       // Reconnect WebSocket with new token
       websocketService.reconnectWithToken();
-      
+
       if (onLoginSuccess) {
         onLoginSuccess();
       } else {
@@ -92,23 +92,25 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       console.error('Login failed:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      
+
       let errorMessage = 'Login failed. Please check your credentials.';
-      
-      if (error.response?.status === 401) {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (error.response?.status === 403) {
-        errorMessage = 'Access forbidden. Please contact support.';
-      } else if (error.response?.data?.message) {
+
+      // Prefer backend-provided message if available
+      if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (error.response?.status === 403) {
+        // Provide a more helpful default for newly created users or inactive accounts
+        errorMessage = 'Access forbidden. Your account may need activation or approval. If this persists, please contact support.';
       } else if (error.message && !error.message.includes('Network Error')) {
         errorMessage = `Login error: ${error.message}`;
       } else if (error.message && error.message.includes('Network Error')) {
         errorMessage = 'Unable to connect to server. Please check your connection.';
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -176,8 +178,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
               />
             </div>
 
-            <Button 
-              onClick={handleLogin} 
+            <Button
+              onClick={handleLogin}
               disabled={isLoading}
               className="w-full"
             >

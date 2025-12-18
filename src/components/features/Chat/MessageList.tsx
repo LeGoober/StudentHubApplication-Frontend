@@ -11,6 +11,7 @@ interface Message {
     name: string;
     avatar?: string;
     isOnline?: boolean;
+    userRole?: string;
   };
   timestamp: Date | string;
   edited?: boolean;
@@ -147,7 +148,7 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <div className="flex-1 relative bg-gray-600">
+    <div className="flex-1 min-h-0 relative bg-gray-600">
       {/* Messages container */}
       <div
         ref={messagesContainerRef}
