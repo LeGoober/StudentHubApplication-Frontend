@@ -21,12 +21,14 @@ When creating your Web Service on Render, configure the following environment va
 
 ### Required Environment Variables:
 
-- `REACT_APP_API_URL` - Your backend API URL (e.g., `https://your-backend.onrender.com`)
+- `REACT_APP_API_URL` - Your backend API URL (e.g., `https://studenthubapplication-backend.onrender.com`)
 
 **Example:**
 ```
-REACT_APP_API_URL=https://studenthub-backend.onrender.com
+REACT_APP_API_URL=https://studenthubapplication-backend.onrender.com
 ```
+
+**Important:** This environment variable is baked into the build at build time. If you change it, you must rebuild and redeploy.
 
 ## 4. Build & Start Commands
 
