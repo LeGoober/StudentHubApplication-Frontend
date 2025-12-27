@@ -21,60 +21,31 @@ const App: React.FC = () => {
             <Route path="/auth" element={<AuthScreen />} />
             <Route
               path="/"
-              element={
-                isAuthenticated ?
-                <Navigate to="/channels" replace /> :
-                <Navigate to="/auth" replace />
-              }
+              element={<Navigate to="/channels" replace />}
             />
             <Route
               path="/channels"
-              element={
-                isAuthenticated ?
-                <ErrorBoundary><ChannelScreen /></ErrorBoundary> :
-                <Navigate to="/auth" replace />
-              }
+              element={<ErrorBoundary><ChannelScreen /></ErrorBoundary>}
             />
             <Route
               path="/profile/:id"
-              element={
-                isAuthenticated ?
-                <ErrorBoundary><ProfileScreen /></ErrorBoundary> :
-                <Navigate to="/auth" replace />
-              }
+              element={<ErrorBoundary><ProfileScreen /></ErrorBoundary>}
             />
             <Route
               path="/entrepreneur/products"
-              element={
-                isAuthenticated ?
-                  <ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary> :
-                  <Navigate to="/auth" replace />
-              }
+              element={<ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary>}
             />
-            {/* Alias for legacy/direct URL */}
             <Route
               path="/entrepreneur-products"
-              element={
-                isAuthenticated ?
-                  <ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary> :
-                  <Navigate to="/auth" replace />
-              }
+              element={<ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary>}
             />
             <Route
               path="/entrepreneurs/:userId"
-              element={
-                isAuthenticated ?
-                  <ErrorBoundary><EntrepreneurUserProfileScreen /></ErrorBoundary> :
-                  <Navigate to="/auth" replace />
-              }
+              element={<ErrorBoundary><EntrepreneurUserProfileScreen /></ErrorBoundary>}
             />
             <Route
               path="/entrepreneurs/:userId/products"
-              element={
-                isAuthenticated ?
-                  <ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary> :
-                  <Navigate to="/auth" replace />
-              }
+              element={<ErrorBoundary><EntrepreneurProductsScreen /></ErrorBoundary>}
             />
             <Route path="*" element={<div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">404 - Page Not Found</div>} />
           </Routes>
